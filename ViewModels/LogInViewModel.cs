@@ -2,6 +2,8 @@
 using CommunityToolkit.Mvvm.Input;
 using GetOutAdminV2.Managers;
 using GetOutAdminV2.Models;
+using GetOutAdminV2.Services;
+using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Input;
@@ -11,7 +13,7 @@ namespace GetOutAdminV2.ViewModels
     public partial class LogInViewModel : BaseViewModel
     {
         private readonly IUserManager _userManager;
-        public LogInViewModel(IUserManager userManager)
+        public LogInViewModel()
         {
             Email = string.Empty;
             Password = string.Empty;
@@ -19,16 +21,16 @@ namespace GetOutAdminV2.ViewModels
             ErrorMessage = string.Empty;
             IsLoading = false;
 
-            _userManager = userManager;
+            _userManager = ServiceLocator.GetRequiredService<IUserManager>();
+
+            _userManager.GetAllUsers();
         }
 
-        public LogInViewModel() { }
+        [ObservableProperty]
+        private bool? _hasError = false; 
 
         [ObservableProperty]
-        private bool? _hasError; 
-
-        [ObservableProperty]
-        private string? _errorMessage;
+        private string? _errorMessage = string.Empty;
 
         private ICommand? _logInCommand;
         public ICommand LogInCommand => _logInCommand ??= new AsyncRelayCommand(LogInAsync); // Notez le AsyncRelayCommand
@@ -48,16 +50,15 @@ namespace GetOutAdminV2.ViewModels
                 HasError = false;
                 IsLoading = true;
 
-                string hashedPassword = HashPassword(Password);
-                await Task.Delay(TimeSpan.FromSeconds(2)); // Maintenant le delay sera effectif
+                var user = _userManager.GetUserByEmail(Email);
 
-                var user = new User
+                if (user == null)
                 {
-                    Email = Email,
-                    Password = hashedPassword
-                };
-
-                _userManager.CurrentUser = user; // Pas besoin de créer un nouveau User vide avant
+                    ErrorMessage = "Email ou mot de passe incorrect";
+                    HasError = true;
+                    return;
+                }
+                _userManager.CurrentUser = user;                
             }
             catch (Exception ex)
             {
@@ -67,20 +68,6 @@ namespace GetOutAdminV2.ViewModels
             finally
             {
                 IsLoading = false;
-            }
-        }
-
-        private string HashPassword(string password)
-        {
-            using (SHA256 sha256 = SHA256.Create())
-            {
-                byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                StringBuilder builder = new StringBuilder();
-                foreach (byte b in bytes)
-                {
-                    builder.Append(b.ToString("x2"));
-                }
-                return builder.ToString();
             }
         }
     }
