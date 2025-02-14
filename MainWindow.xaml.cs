@@ -18,20 +18,9 @@ namespace GetOutAdminV2._0
     /// </summary>
     public partial class MainWindow : Window
     {
-
-        public Frame NavigationFrame => this.ContentFrame;
         public MainWindow()
         {
             InitializeComponent();
-        }
-
-        private void password_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is LogInViewModel viewModel)
-            {
-                var passwordBox = (PasswordBox)sender;
-                viewModel.Password = passwordBox.Password;
-            }
         }
     }
 }

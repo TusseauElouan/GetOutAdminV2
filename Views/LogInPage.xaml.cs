@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GetOutAdminV2.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,15 @@ namespace GetOutAdminV2.Views
         public LogInPage()
         {
             InitializeComponent();
+        }
+
+        private void password_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is LogInViewModel viewModel)
+            {
+                var passwordBox = (PasswordBox)sender;
+                viewModel.Password = passwordBox.Password;
+            }
         }
     }
 }
