@@ -6,21 +6,48 @@
         xmlns:fa="http://schemas.fontawesome.io/icons/"
         xmlns:local="clr-namespace:GetOutAdminV2._0"
         xmlns:behaviors="clr-namespace:GetOutAdminV2._0"
+        xmlns:vm="clr-namespace:GetOutAdminV2.ViewModels"
         Title="MainWindow" Height="1080" Width="1920" 
         Background="Black" 
         WindowState="Minimized" 
         WindowStyle="SingleBorderWindow" 
         WindowStartupLocation="CenterScreen">
+    <Window.DataContext>
+        <vm:NavigationViewModel/>
+    </Window.DataContext>
     <Grid>
         <Border
-            Background="#6B46C1"
+            Background="Black"
             CornerRadius="20"
             />
 
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="200"/>
             </Grid.RowDefinitions>
+        </Grid>
+        <Grid VerticalAlignment="Top"
+              Width="auto">
+            <Border
+                Background="#6B46C1"
+                CornerRadius="0, 0, 20, 20"
+                />
+            <StackPanel Height="100">
+                <Button Command="{Binding LogInCommand}" IsDefault="True">
+                    <Grid>
+                        <Label Content="Connexion"/>
+                    </Grid>
+                </Button>
+                <Button Command="{Binding ListUsersCommand}">
+                    <Grid>
+                        <Label Content="Liste des utilisateurs"/>
+                    </Grid>
+                </Button>
+                <Button Command="{Binding DashBoardCommand}">
+                    <Grid>
+                        <Label Content="DashBoard"/>
+                    </Grid>
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>

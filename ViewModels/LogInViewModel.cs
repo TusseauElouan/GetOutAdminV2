@@ -58,7 +58,8 @@ namespace GetOutAdminV2.ViewModels
                     HasError = true;
                     return;
                 }
-                _userManager.CurrentUser = user;                
+                _userManager.CurrentUser = user;
+                NavigationCommands.NextPage.Execute(new ListUsersViewModel(), null);
             }
             catch (Exception ex)
             {

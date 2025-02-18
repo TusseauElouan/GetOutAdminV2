@@ -8,20 +8,28 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace GetOutAdminV2.Services
+namespace GetOutAdminV2.ViewModels
 {
-    public partial class NavigationService : BaseViewModel
+    public partial class NavigationViewModel : BaseViewModel
     {
         [ObservableProperty]
         private object _currentPage;
 
         public ICommand ListUsersCommand { get; set; }
+        public ICommand LogInCommand { get; set; }
+        public ICommand DashBoardCommand { get; set; }
 
         private void ListUsers() => CurrentPage = new ListUsersViewModel();
 
-        public NavigationService()
+        private void LogIn() => CurrentPage = new LogInViewModel();
+
+        private void DashBoard() => CurrentPage = new DashBoardViewModel();
+
+        public NavigationViewModel()
         {
+            LogInCommand = new RelayCommand(LogIn);
             ListUsersCommand = new RelayCommand(ListUsers);
+            DashBoardCommand = new RelayCommand(DashBoard);
         }
     }
 }
