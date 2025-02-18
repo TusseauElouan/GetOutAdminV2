@@ -22,5 +22,11 @@ namespace GetOutAdminV2.ViewModels
 
         [ObservableProperty]
         private object _currentPage;
+
+        public void NavigateTo(object newPage)
+        {
+            CurrentPage = newPage;
+            OnPropertyChanged(nameof(CurrentPage));
+        }
     }
 }

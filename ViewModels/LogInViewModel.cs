@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using GetOutAdminV2.Managers;
 using GetOutAdminV2.Models;
 using GetOutAdminV2.Services;
+using GetOutAdminV2.Views;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography;
 using System.Text;
@@ -13,7 +14,8 @@ namespace GetOutAdminV2.ViewModels
     public partial class LogInViewModel : BaseViewModel
     {
         private readonly IUserManager _userManager;
-        public LogInViewModel()
+        private readonly NavigationViewModel _navigationViewModel;
+        public LogInViewModel(NavigationViewModel navigationViewModel)
         {
             Email = string.Empty;
             Password = string.Empty;
@@ -21,8 +23,9 @@ namespace GetOutAdminV2.ViewModels
             ErrorMessage = string.Empty;
             IsLoading = false;
 
-            _userManager = ServiceLocator.GetRequiredService<IUserManager>();
+            _navigationViewModel = navigationViewModel;
 
+            _userManager = ServiceLocator.GetRequiredService<IUserManager>();
             _userManager.GetAllUsers();
         }
 
@@ -58,7 +61,8 @@ namespace GetOutAdminV2.ViewModels
                     HasError = true;
                     return;
                 }
-                _userManager.CurrentUser = user;                
+                _userManager.CurrentUser = user;
+                _navigationViewModel.ListUsersCommand.Execute(null);
             }
             catch (Exception ex)
             {

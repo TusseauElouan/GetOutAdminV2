@@ -46,7 +46,7 @@ namespace GetOutAdminV2._0
                     // Enregistrement des services
                     services.AddSingleton<IUserProvider, UserProvider>();
                     services.AddSingleton<IUserManager, UserManager>();
-                    services.AddSingleton<LogInViewModel>();
+                    //services.AddSingleton<LogInViewModel>();
                     services.AddSingleton<MainWindow>();
                     services.AddSingleton<NavigationViewModel>();
                 })

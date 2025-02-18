@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GetOutAdminV2.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,9 +21,11 @@ namespace GetOutAdminV2.Views
     /// </summary>
     public partial class ListUserPage : Page
     {
+        private ListUsersViewModel? _viewModel;
         public ListUserPage()
         {
             InitializeComponent();
+            this.DataContext = new ListUsersViewModel();
         }
     }
 }

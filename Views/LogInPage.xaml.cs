@@ -1,4 +1,6 @@
-﻿using GetOutAdminV2.ViewModels;
+﻿using GetOutAdminV2.Managers;
+using GetOutAdminV2.Services;
+using GetOutAdminV2.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,17 +23,28 @@ namespace GetOutAdminV2.Views
     /// </summary>
     public partial class LogInPage : Page
     {
+        private LogInViewModel? _viewModel;
+
         public LogInPage()
         {
             InitializeComponent();
+            this.Loaded += LogInPage_Loaded;
+        }
+
+        private void LogInPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (Application.Current.MainWindow?.DataContext is NavigationViewModel navViewModel)
+            {
+                _viewModel = new LogInViewModel(navViewModel);
+                this.DataContext = _viewModel;
+            }
         }
 
         private void Password_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            if (DataContext is LogInViewModel viewModel)
+            if (_viewModel != null && sender is PasswordBox passwordBox)
             {
-                var passwordBox = (PasswordBox)sender;
-                viewModel.Password = passwordBox.Password;
+                _viewModel.Password = passwordBox.Password;
             }
         }
     }

@@ -8,25 +8,37 @@ namespace GetOutAdminV2.ViewModels
 {
     public partial class NavigationViewModel : BaseViewModel
     {
-        [ObservableProperty]
-        private object _currentPage;
-
         public ICommand ListUsersCommand { get; set; }
         public ICommand LogInCommand { get; set; }
-        public ICommand DashBoardCommand { get; set; }
+        //public ICommand DashBoardCommand { get; set; }
 
-        private void ListUsers() => CurrentPage = new ListUsersViewModel();
+        [ObservableProperty]
+        private bool _isNotLogInPage;
 
-        private void LogIn() => CurrentPage = new LogInViewModel();
+        private void ListUsers()
+        {
+            IsNotLogInPage = true;
+            CurrentPage = new ListUserPage();
+        }
 
-        private void DashBoard() => CurrentPage = new DashBoardViewModel();
+        private void LogIn()
+        {
+            CurrentPage = new LogInPage();
+            IsNotLogInPage = false;
+        }
+
+        //private void DashBoard()
+        //{
+        //    CurrentPage = new DashBoardPage(); // Changé en Page au lieu de ViewModel
+        //    IsNotLogInPage = true;
+        //}
 
         public NavigationViewModel()
         {
             ListUsersCommand = new RelayCommand(ListUsers);
             LogInCommand = new RelayCommand(LogIn);
             CurrentPage = new LogInPage();
-            DashBoardCommand = new RelayCommand(DashBoard);
+            IsNotLogInPage = false;
         }
     }
 }

@@ -5,14 +5,119 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:GetOutAdminV2.Views"
       xmlns:vm="clr-namespace:GetOutAdminV2.ViewModels"
+      xmlns:fa="http://schemas.fontawesome.io/icons/"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="ListUserPage">
+      Title="ListUserPage"
+      Background="#1A1A1A">
+    <!-- Fond de la page en noir -->
 
-    <Page.DataContext>
-        <vm:ListUsersViewModel/>
-    </Page.DataContext>
-    <DataGrid>
-        
-    </DataGrid>
+    <Page.Resources>
+        <!-- Style pour les boutons -->
+        <Style x:Key="PaginationButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#6B46C1" />
+            <!-- Couleur de fond -->
+            <Setter Property="Foreground" Value="White" />
+            <!-- Couleur du texte -->
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="5" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#7E5CC4" />
+                    <!-- Couleur au survol -->
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#5A3AA3" />
+                    <!-- Couleur au clic -->
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#A0A0A0" />
+                    <!-- Couleur désactivée -->
+                    <Setter Property="Foreground" Value="#E0E0E0" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Style pour le DataGrid -->
+        <Style x:Key="StyledDataGrid" TargetType="DataGrid">
+            <Setter Property="Background" Value="#1E1E1E" />
+            <!-- Fond du DataGrid -->
+            <Setter Property="Foreground" Value="White" />
+            <!-- Couleur du texte -->
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Width" Value="750" />
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="RowBackground" Value="#2E2E2E" />
+            <!-- Fond des lignes -->
+            <Setter Property="AlternatingRowBackground" Value="#3E3E3E" />
+            <!-- Fond des lignes alternées -->
+            <Setter Property="GridLinesVisibility" Value="None" />
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ColumnHeaderStyle">
+                <Setter.Value>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#6B46C1" />
+                        <!-- Fond des en-têtes -->
+                        <Setter Property="Foreground" Value="White" />
+                        <!-- Texte des en-têtes -->
+                        <Setter Property="FontSize" Value="14" />
+                        <Setter Property="Padding" Value="10,5" />
+                        <Setter Property="HorizontalContentAlignment" Value="Center" />
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- DataGrid pour afficher les utilisateurs -->
+        <DataGrid Style="{StaticResource StyledDataGrid}" ItemsSource="{Binding Users}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="100" />
+                <DataGridTextColumn Header="Nom" Binding="{Binding Nom}" Width="200" />
+                <DataGridTextColumn Header="Prénom" Binding="{Binding Prenom}" Width="200" />
+                <DataGridTextColumn Header="Tag" Binding="{Binding Tag}" Width="250" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Boutons de pagination -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <Button Command="{Binding LoadPreviousPageCommand}" 
+            IsEnabled="{Binding CanLoadPreviousPage}" 
+            Style="{StaticResource PaginationButtonStyle}">
+                <fa:ImageAwesome Icon="ArrowLeft" Foreground="White" Width="16" Height="16" />
+                <!-- Taille réduite -->
+            </Button>
+            <Button Command="{Binding LoadNextPageCommand}" 
+            Style="{StaticResource PaginationButtonStyle}">
+                <fa:ImageAwesome Icon="ArrowRight" Foreground="White" Width="16" Height="16" />
+                <!-- Taille réduite -->
+            </Button>
+        </StackPanel>
+    </Grid>
 </Page>

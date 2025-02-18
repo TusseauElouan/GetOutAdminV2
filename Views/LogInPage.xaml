@@ -10,10 +10,6 @@
       mc:Ignorable="d" 
       d:DesignHeight="800" d:DesignWidth="450"
       Title="LogInPage">
-
-    <Page.DataContext>
-        <vm:LogInViewModel/>
-    </Page.DataContext>
     <Page.Resources>
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:ErrorBorderConverter x:Key="ErrorBorderConverter"/>
