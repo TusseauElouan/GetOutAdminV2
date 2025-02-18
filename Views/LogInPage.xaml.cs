@@ -26,7 +26,7 @@ namespace GetOutAdminV2.Views
             InitializeComponent();
         }
 
-        private void password_PasswordChanged(object sender, RoutedEventArgs e)
+        private void Password_PasswordChanged(object sender, RoutedEventArgs e)
         {
             if (DataContext is LogInViewModel viewModel)
             {

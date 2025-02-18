@@ -3,6 +3,7 @@ using GetOutAdminV2.Models;
 using GetOutAdminV2.Providers;
 using GetOutAdminV2.Services;
 using GetOutAdminV2.ViewModels;
+using GetOutAdminV2.Views;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,6 +48,7 @@ namespace GetOutAdminV2._0
                     services.AddSingleton<IUserManager, UserManager>();
                     services.AddSingleton<LogInViewModel>();
                     services.AddSingleton<MainWindow>();
+                    services.AddSingleton<NavigationViewModel>();
                 })
                 .Build();
 

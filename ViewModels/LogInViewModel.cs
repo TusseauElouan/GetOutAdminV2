@@ -27,15 +27,15 @@ namespace GetOutAdminV2.ViewModels
         }
 
         [ObservableProperty]
-        private bool? _hasError = false; 
+        private bool? _hasError = false;
 
         [ObservableProperty]
         private string? _errorMessage = string.Empty;
 
         private ICommand? _logInCommand;
-        public ICommand LogInCommand => _logInCommand ??= new AsyncRelayCommand(LogInAsync); // Notez le AsyncRelayCommand
+        public ICommand LogInCommand => _logInCommand ??= new RelayCommand(LogIn); // Notez le AsyncRelayCommand
 
-        private async Task LogInAsync()
+        private void LogIn()
         {
             if (string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(Password))
             {
@@ -58,8 +58,7 @@ namespace GetOutAdminV2.ViewModels
                     HasError = true;
                     return;
                 }
-                _userManager.CurrentUser = user;
-                NavigationCommands.NextPage.Execute(new ListUsersViewModel(), null);
+                _userManager.CurrentUser = user;                
             }
             catch (Exception ex)
             {

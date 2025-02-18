@@ -1,5 +1,8 @@
 ﻿using GetOutAdminV2.Managers;
+using GetOutAdminV2.Services;
 using GetOutAdminV2.ViewModels;
+using GetOutAdminV2.Views;
+using System.Diagnostics;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,6 +24,8 @@ namespace GetOutAdminV2._0
         public MainWindow()
         {
             InitializeComponent();
+            var navigation = new NavigationViewModel();
+            navigation.CurrentPage = new LogInPage();
         }
     }
 }

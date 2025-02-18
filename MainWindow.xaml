@@ -7,10 +7,9 @@
         xmlns:local="clr-namespace:GetOutAdminV2._0"
         xmlns:behaviors="clr-namespace:GetOutAdminV2._0"
         xmlns:vm="clr-namespace:GetOutAdminV2.ViewModels"
-        Title="MainWindow" Height="1080" Width="1920" 
-        Background="Black" 
-        WindowState="Minimized" 
-        WindowStyle="SingleBorderWindow" 
+        Title="MainWindow" Height="900" Width="1600"
+        Background="#1E1E1E" 
+        WindowStyle="ThreeDBorderWindow" 
         WindowStartupLocation="CenterScreen">
     <Window.DataContext>
         <vm:NavigationViewModel/>
@@ -49,5 +48,13 @@
                     </Grid>
             </StackPanel>
         </Grid>
+            Margin="20">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Frame Content="{Binding CurrentPage}" NavigationUIVisibility="Hidden" Margin="10"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

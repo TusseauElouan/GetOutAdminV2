@@ -1,11 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GetOutAdminV2.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using GetOutAdminV2.Views;
 using System.Windows.Input;
 
 namespace GetOutAdminV2.ViewModels
@@ -27,8 +23,9 @@ namespace GetOutAdminV2.ViewModels
 
         public NavigationViewModel()
         {
-            LogInCommand = new RelayCommand(LogIn);
             ListUsersCommand = new RelayCommand(ListUsers);
+            LogInCommand = new RelayCommand(LogIn);
+            CurrentPage = new LogInPage();
             DashBoardCommand = new RelayCommand(DashBoard);
         }
     }

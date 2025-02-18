@@ -65,7 +65,7 @@
                     <PasswordBox x:Name="password" FontSize="18" 
                            Background="Transparent" Foreground="White" 
                            BorderThickness="0"
-                           PasswordChanged="password_PasswordChanged"/>
+                           PasswordChanged="Password_PasswordChanged"/>
                 </Border>
 
                 <!-- Login Button -->
