@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using GetOutAdminV2.Views;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -18,5 +19,8 @@ namespace GetOutAdminV2.ViewModels
 
         [ObservableProperty]
         private string? _password;
+
+        [ObservableProperty]
+        private object _currentPage;
     }
 }
