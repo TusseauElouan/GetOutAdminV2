@@ -9,101 +9,107 @@ namespace GetOutAdminV2.ViewModels
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using System.Windows;
     using System.Windows.Input;
 
     public partial class ListUsersViewModel : BaseViewModel
     {
-        private const int PageSize = 50; // Nombre d'utilisateurs par page
-        private int _currentPage = 0; // Page actuelle
+        private const int PageSize = 1; // Nombre d'utilisateurs par page
+        private int _currentPage = -1; // Page actuelle (index backend)
         private int _totalUsers; // Nombre total d'utilisateurs
         public ObservableCollection<User> Users { get; set; }
 
         [ObservableProperty]
         private string? _pageInfo;
+
+        [ObservableProperty]
+        private int _selectedPageIndex = 1; // Index visuel (commence à 1)
+
+        [ObservableProperty]
+        private int _totalPages;
+
         public ICommand LoadNextPageCommand { get; }
         public ICommand LoadPreviousPageCommand { get; }
+        public ICommand GoToPageCommand { get; }
 
         private readonly IUserManager _userManager;
+
         public ListUsersViewModel()
         {
             Users = new ObservableCollection<User>();
-            LoadNextPageCommand = new RelayCommand(LoadNextPage, CanLoadNextPage);
-            LoadPreviousPageCommand = new RelayCommand(LoadPreviousPage, CanLoadPreviousPage);
+            LoadNextPageCommand = new RelayCommand(LoadNextPage);
+            LoadPreviousPageCommand = new RelayCommand(LoadPreviousPage);
+            GoToPageCommand = new RelayCommand(GoToPage);
 
             // Initialise le nombre total d'utilisateurs
             _userManager = ServiceLocator.GetRequiredService<IUserManager>();
             _totalUsers = ListOfUsers.Count;
+            TotalPages = (int)Math.Ceiling((double)_totalUsers / PageSize);
             LoadNextPage(); // Charge la première page au démarrage
         }
+
         public ObservableCollection<User> ListOfUsers => _userManager.ListOfUsers;
+
+        [ObservableProperty]
+        private bool _canLoadPreviousPage;
+        [ObservableProperty]
+        private bool _canLoadNextPage;
+
+        private IEnumerable<User> GetUsers(int startIndex, int count) => ListOfUsers.Skip(startIndex).Take(count);
 
         private void LoadNextPage()
         {
-            // Récupère les utilisateurs pour la page actuelle
-            var nextUsers = GetUsers(_currentPage * PageSize, PageSize);
-
-            // Ajoute les utilisateurs à la liste
-            Users.Clear();
-            foreach (var user in nextUsers)
-            {
-                Users.Add(user);
-            }
-
-            // Passe à la page suivante
+            // Charge la page suivante
             _currentPage++;
-
-            // Met à jour la possibilité de charger la page précédente
-            CanLoadPreviousPage();
-
-            // Met à jour l'affichage de la pagination
-            UpdatePageInfo();
+            LoadUsersForPage(_currentPage);
+            SelectedPageIndex = _currentPage + 1; // Met à jour l'index visuel
+            CanLoadPreviousPage = _currentPage > 0;
+            CanLoadNextPage = _totalUsers > (_currentPage + 1) * PageSize;
         }
 
         private void LoadPreviousPage()
         {
-            // Recharge les utilisateurs de la page précédente
+            // Charge la page précédente
             _currentPage--;
-            var previousUsers = GetUsers(_currentPage * PageSize, PageSize);
+            LoadUsersForPage(_currentPage);
+            SelectedPageIndex = _currentPage + 1; // Met à jour l'index visuel
+            CanLoadPreviousPage = _currentPage > 0;
+            CanLoadNextPage = _totalUsers > (_currentPage + 1) * PageSize;
+        }
 
+        private void GoToPage()
+        {
+            // Convertit l'index visuel en index backend
+            int backendPageIndex = SelectedPageIndex - 1;
+
+            // Vérifie que l'index de page est valide
+            int maxPageIndex = (int)Math.Ceiling((double)_totalUsers / PageSize) - 1;
+            if (backendPageIndex < 0 || backendPageIndex > maxPageIndex)
+            {
+                MessageBox.Show($"Index de page invalide. Veuillez saisir un index entre 1 et {maxPageIndex + 1}.");
+                SelectedPageIndex = _currentPage + 1; // Réinitialise l'index visuel
+                return;
+            }
+
+            // Charge les utilisateurs de la page spécifiée
+            _currentPage = backendPageIndex;
+            LoadUsersForPage(_currentPage);
+        }
+
+        private void LoadUsersForPage(int pageIndex)
+        {
+            // Récupère les utilisateurs pour la page spécifiée
+            var users = GetUsers(pageIndex * PageSize, PageSize);
+
+            // Met à jour la liste des utilisateurs
             Users.Clear();
-            foreach (var user in previousUsers)
+            foreach (var user in users)
             {
                 Users.Add(user);
             }
 
-            // Met à jour la possibilité de charger la page précédente
-            CanLoadPreviousPage();
-
-            // Met à jour l'affichage de la pagination
-            UpdatePageInfo();
-        }
-
-        private bool CanLoadNextPage()
-        {
-            // Vérifie s'il reste des utilisateurs à charger
-            return _totalUsers > (_currentPage + 1) * PageSize;
-        }
-
-        private bool CanLoadPreviousPage()
-        {
-            // Vérifie si on peut revenir à la page précédente
-            return _currentPage > 0;
-        }
-
-        private IEnumerable<User> GetUsers(int startIndex, int count)
-        {
-            // Simule la récupération des utilisateurs depuis une source de données
-            return ListOfUsers.Skip(startIndex).Take(count);
-        }
-
-        private void UpdatePageInfo()
-        {
-            // Calcule l'index de début et de fin de la page actuelle
-            int startIndex = _currentPage * PageSize + 1;
-            int endIndex = Math.Min((_currentPage + 1) * PageSize, _totalUsers);
-
-            // Met à jour l'affichage de la pagination
-            PageInfo = $"{startIndex}-{endIndex} sur {_totalUsers}";
+            CanLoadPreviousPage = _currentPage > 0;
+            CanLoadNextPage = _totalUsers > (_currentPage + 1) * PageSize;
         }
     }
 }

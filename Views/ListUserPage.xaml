@@ -13,6 +13,22 @@
     <!-- Fond de la page en noir -->
 
     <Page.Resources>
+        <!-- Style pour centrer le texte dans les cellules du DataGrid -->
+        <Style x:Key="CenteredCellStyle" TargetType="DataGridCell">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Grid Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="TextBlock.TextAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+
         <!-- Style pour les boutons -->
         <Style x:Key="PaginationButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#6B46C1" />
@@ -96,27 +112,38 @@
         </Grid.RowDefinitions>
 
         <!-- DataGrid pour afficher les utilisateurs -->
-        <DataGrid Style="{StaticResource StyledDataGrid}" ItemsSource="{Binding Users}">
+        <DataGrid Style="{StaticResource StyledDataGrid}" ItemsSource="{Binding Users}" CellStyle="{StaticResource CenteredCellStyle}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="100" />
-                <DataGridTextColumn Header="Nom" Binding="{Binding Nom}" Width="200" />
-                <DataGridTextColumn Header="Prénom" Binding="{Binding Prenom}" Width="200" />
-                <DataGridTextColumn Header="Tag" Binding="{Binding Tag}" Width="250" />
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="100" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Nom" Binding="{Binding Nom}" Width="200" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Prénom" Binding="{Binding Prenom}" Width="200" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Tag" Binding="{Binding Tag}" Width="250" IsReadOnly="True"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Boutons de pagination -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <!-- Bouton Précédent -->
             <Button Command="{Binding LoadPreviousPageCommand}" 
             IsEnabled="{Binding CanLoadPreviousPage}" 
             Style="{StaticResource PaginationButtonStyle}">
                 <fa:ImageAwesome Icon="ArrowLeft" Foreground="White" Width="16" Height="16" />
-                <!-- Taille réduite -->
             </Button>
+
+            <!-- Saisie de l'index de la page -->
+            <TextBox Width="50" Margin="5" Text="{Binding SelectedPageIndex, UpdateSourceTrigger=PropertyChanged}" 
+             VerticalAlignment="Center" HorizontalContentAlignment="Center" Background="#2A2A2A" Foreground="White"/>
+            <Label Content=" / " Foreground="White" VerticalAlignment="Center" Margin="5" />
+            <Label Content="{Binding TotalPages}" Foreground="White" VerticalAlignment="Center" Margin="5" />
+
+            <!-- Bouton Aller à la page -->
+            <Button Command="{Binding GoToPageCommand}" 
+            Style="{StaticResource PaginationButtonStyle}" 
+            Content="Aller" Margin="5" VerticalAlignment="Center" />
+
+            <!-- Bouton Suivant -->
             <Button Command="{Binding LoadNextPageCommand}" 
             Style="{StaticResource PaginationButtonStyle}">
                 <fa:ImageAwesome Icon="ArrowRight" Foreground="White" Width="16" Height="16" />
-                <!-- Taille réduite -->
             </Button>
         </StackPanel>
     </Grid>
