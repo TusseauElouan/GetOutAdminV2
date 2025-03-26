@@ -52,8 +52,15 @@ namespace GetOutAdminV2.ViewModels
                 ErrorMessage = string.Empty;
                 HasError = false;
                 IsLoading = true;
-
+                
                 var user = _userManager.GetUserByEmail(Email);
+
+                if (!VerifyPassword(Password, user.Password))
+                {
+                    ErrorMessage = "Email ou mot de passe incorrect";
+                    HasError = true;
+                    return;
+                }
 
                 if (user == null)
                 {
@@ -62,7 +69,7 @@ namespace GetOutAdminV2.ViewModels
                     return;
                 }
                 _userManager.CurrentUser = user;
-                _navigationViewModel.ListUsersCommand.Execute(null);
+                _navigationViewModel.DashBoardCommand.Execute(null);
             }
             catch (Exception ex)
             {
@@ -73,6 +80,11 @@ namespace GetOutAdminV2.ViewModels
             {
                 IsLoading = false;
             }
+        }
+
+        private bool VerifyPassword(string password, string storedHash)
+        {
+            return BCrypt.Net.BCrypt.Verify(password, storedHash);
         }
     }
 }

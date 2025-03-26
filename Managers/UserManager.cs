@@ -8,19 +8,21 @@ namespace GetOutAdminV2.Managers
     public interface IUserManager
     {
         void GetAllUsers();
-        User GetUserById(int id);
+        User GetUserById(long id);
         User GetUserByEmail(string email);
         User GetUserByLogin(string email, string password);
         void AddUser(User user);
         void UpdateUser(User user);
-        void DeleteUser(int id);
+        void DeleteUser(long id);
         User CurrentUser { get; set; }
         ObservableCollection<User> ListOfUsers { get; set; }
+
+        event Action UsersUpdated;
     }
     public class UserManager : IUserManager
     {
         readonly IUserProvider _userProvider;
-
+        public event Action UsersUpdated;
         public User CurrentUser { get; set; }
         public ObservableCollection<User> ListOfUsers { get; set; }
         public UserManager(IUserProvider userProvider)
@@ -31,15 +33,16 @@ namespace GetOutAdminV2.Managers
 
         public void GetAllUsers()
         {
-            var users = _userProvider.GetUsers();
+            var users = _userProvider.GetUsers().OrderBy(u => u.Id);
             ListOfUsers.Clear();
             foreach (var user in users)
             {
                 ListOfUsers.Add(user);
             }
+            UsersUpdated?.Invoke();
         }
 
-        public User GetUserById(int id)
+        public User GetUserById(long id)
         {
             return _userProvider.GetUserById(id);
         }
@@ -57,16 +60,23 @@ namespace GetOutAdminV2.Managers
         public void AddUser(User user)
         {
             _userProvider.AddUser(user);
+            UsersUpdated?.Invoke();
         }
 
         public void UpdateUser(User user)
         {
             _userProvider.UpdateUser(user);
+            UsersUpdated?.Invoke();
         }
 
-        public void DeleteUser(int id)
+        public void DeleteUser(long id)
         {
             _userProvider.DeleteUser(id);
+            var userToRemove = ListOfUsers.FirstOrDefault(_ => _.Id == id);
+            if (userToRemove != null)
+            {
+                ListOfUsers.Remove(userToRemove);
+            }
         }
     }
 }

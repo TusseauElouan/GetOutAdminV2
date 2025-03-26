@@ -12,12 +12,12 @@ namespace GetOutAdminV2.Providers
     public interface IUserProvider
     {
         ObservableCollection<User> GetUsers();
-        User GetUserById(int id);
+        User GetUserById(long id);
         User GetUserByEmail(string email);
         User GetUserByLogin(string email, string password);
         void AddUser(User user);
         void UpdateUser(User user);
-        void DeleteUser(int id);
+        void DeleteUser(long id);
     }
 
     public class UserProvider : IUserProvider
@@ -44,7 +44,7 @@ namespace GetOutAdminV2.Providers
             }
         }
 
-        public User GetUserById(int id)
+        public User GetUserById(long id)
         {
             try
             {
@@ -111,7 +111,7 @@ namespace GetOutAdminV2.Providers
             }
         }
 
-        public void DeleteUser(int id)
+        public void DeleteUser(long id)
         {
             try
             {

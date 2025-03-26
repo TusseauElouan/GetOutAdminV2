@@ -1,6 +1,4 @@
-﻿using GetOutAdminV2.Managers;
-using GetOutAdminV2.ViewModels;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,15 +16,14 @@ using System.Windows.Shapes;
 namespace GetOutAdminV2.Views
 {
     /// <summary>
-    /// Logique d'interaction pour ListUserPage.xaml
+    /// Logique d'interaction pour DashBoardPage.xaml
     /// </summary>
-    public partial class ListUserPage : Page
+    public partial class DashBoardPage : Page
     {
-        private ListUsersViewModel? _viewModel;
-        public ListUserPage()
+        public DashBoardPage()
         {
             InitializeComponent();
-            this.DataContext = new ListUsersViewModel();
+            this.DataContext = new ViewModels.DashboardViewModel();
         }
     }
 }

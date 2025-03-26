@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace GetOutAdminV2.ViewModels
 {
@@ -21,9 +22,9 @@ namespace GetOutAdminV2.ViewModels
         private string? _password;
 
         [ObservableProperty]
-        private object _currentPage;
+        private Page? _currentPage;
 
-        public void NavigateTo(object newPage)
+        public void NavigateTo(Page newPage)
         {
             CurrentPage = newPage;
             OnPropertyChanged(nameof(CurrentPage));

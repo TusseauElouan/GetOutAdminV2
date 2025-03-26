@@ -1,0 +1,88 @@
+﻿<Page x:Class="GetOutAdminV2.Views.EditUserPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:GetOutAdminV2.Views"
+      xmlns:vm="clr-namespace:GetOutAdminV2.ViewModels"
+      xmlns:fa="http://schemas.fontawesome.io/icons/"
+      mc:Ignorable="d"
+      Title="EditUserPage"
+      Background="#1A1A1A">
+
+    <Page.Resources>
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Margin" Value="0,15,0,5" />
+        </Style>
+
+        <Style x:Key="TextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#2E2E2E" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Height" Value="40" />
+        </Style>
+
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#6B46C1" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Padding" Value="20,10" />
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style x:Key="CancelButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#4A4A4A" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Padding" Value="20,10" />
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <Border Background="#1E1E1E" Width="500" Padding="30" CornerRadius="10">
+            <StackPanel>
+                <TextBlock Text="Modification d'un utilisateur" 
+                           FontSize="24" 
+                           FontWeight="Bold" 
+                           Foreground="White" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,0,0,30"/>
+
+                <TextBlock Text="ID" Style="{StaticResource LabelStyle}" />
+                <TextBox IsReadOnly="True" 
+                         Text="{Binding User.Id}" 
+                         Style="{StaticResource TextBoxStyle}"/>
+
+                <TextBlock Text="Nom" Style="{StaticResource LabelStyle}" />
+                <TextBox Text="{Binding User.Nom, UpdateSourceTrigger=PropertyChanged}" 
+                         Style="{StaticResource TextBoxStyle}"/>
+
+                <TextBlock Text="Prénom" Style="{StaticResource LabelStyle}" />
+                <TextBox Text="{Binding User.Prenom, UpdateSourceTrigger=PropertyChanged}" 
+                         Style="{StaticResource TextBoxStyle}"/>
+
+                <TextBlock Text="Tag" Style="{StaticResource LabelStyle}" />
+                <TextBox Text="{Binding User.Tag, UpdateSourceTrigger=PropertyChanged}" 
+                         Style="{StaticResource TextBoxStyle}"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,30,0,0">
+                    <Button Command="{Binding CancelCommand}" 
+                            Content="Annuler" 
+                            Style="{StaticResource CancelButtonStyle}"/>
+
+                    <Button Command="{Binding SaveCommand}" 
+                            Content="Enregistrer" 
+                            Style="{StaticResource ActionButtonStyle}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>
