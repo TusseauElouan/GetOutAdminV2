@@ -46,7 +46,7 @@
                                  VerticalAlignment="Stretch"
                                  HorizontalAlignment="Stretch"
                                  Margin="10"
-                                 Foreground="White"
+                                 Foreground="Black"
                                  Background="#1E1E1E"
                                  FontSize="14">
                 <lvc:CartesianChart.AxisX>

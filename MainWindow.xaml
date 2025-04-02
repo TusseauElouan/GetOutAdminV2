@@ -93,6 +93,14 @@
                         <TextBlock Text="Liste des utilisateurs" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
+
+                <!-- Bouton Liste des reports -->
+                <Button Command="{Binding ReportCommand}" Style="{StaticResource NavBarButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome Icon="Flag" Foreground="White" Width="16" Height="16" Margin="0,0,10,0"/>
+                        <TextBlock Text="Liste des reports" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Grid>
 

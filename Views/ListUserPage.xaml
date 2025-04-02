@@ -78,6 +78,7 @@
             <Setter Property="RowStyle">
                 <Setter.Value>
                     <Style TargetType="DataGridRow">
+                        <Setter Property="MinHeight" Value="35"/>
                         <Style.Triggers>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter Property="Background" Value="#6B46C1" />
@@ -143,7 +144,7 @@
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="100"/>
                 <DataGridTextColumn Header="Nom" Binding="{Binding Nom}" Width="200" />
                 <DataGridTextColumn Header="Prénom" Binding="{Binding Prenom}" Width="200" />
-                <DataGridTextColumn Header="Tag" Binding="{Binding Tag}" Width="250" />
+                <DataGridTextColumn Header="Tag" Binding="{Binding Tag}" Width="250"/>
             </DataGrid.Columns>
         </DataGrid>
         <fa:ImageAwesome Icon="Spinner" Visibility="{Binding LoadingVisibility}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White" />

@@ -11,6 +11,7 @@ namespace GetOutAdminV2.ViewModels
         public ICommand ListUsersCommand { get; set; }
         public ICommand LogInCommand { get; set; }
         public ICommand DashBoardCommand { get; set; }
+        public ICommand ReportCommand { get; set; }
 
         [ObservableProperty]
         private bool _isNotLogInPage;
@@ -33,11 +34,18 @@ namespace GetOutAdminV2.ViewModels
             IsNotLogInPage = true;
         }
 
+        private void Report()
+        {
+            CurrentPage = new ReportPage();
+            IsNotLogInPage = true;
+        }
+
         public NavigationViewModel()
         {
             ListUsersCommand = new RelayCommand(ListUsers);
             LogInCommand = new RelayCommand(LogIn);
             DashBoardCommand = new RelayCommand(DashBoard);
+            ReportCommand = new RelayCommand(Report);
             CurrentPage = new LogInPage();
             IsNotLogInPage = false;
         }
