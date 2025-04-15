@@ -4,12 +4,20 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:GetOutAdminV2.Views"
+      xmlns:enum="clr-namespace:GetOutAdminV2.Enum"
       xmlns:fa="http://schemas.fontawesome.io/icons/"
       mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
+      d:DesignHeight="650" d:DesignWidth="800"
       Title="ReportPage"
       Background="#1A1A1A">
     <Page.Resources>
+        <!-- Convertisseur d'énumération pour les statuts de rapport -->
+        <ObjectDataProvider x:Key="ReportStatusValues" MethodName="GetValues" ObjectType="{x:Type enum:EReportStatus}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="enum:EReportStatus"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
         <Style x:Key="CenteredCellStyle" TargetType="DataGridCell">
             <Setter Property="Template">
                 <Setter.Value>
@@ -21,6 +29,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
         <Style x:Key="StyledDataGrid" TargetType="DataGrid">
             <Setter Property="Background" Value="#1E1E1E" />
             <Setter Property="Foreground" Value="White" />
@@ -62,6 +71,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
         <Style x:Key="ActionButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#6B46C1" />
             <Setter Property="Foreground" Value="White" />
@@ -70,7 +80,6 @@
             <Setter Property="Margin" Value="5" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Cursor" Value="Hand" />
-            <!-- Style visuel pour le bouton désactivé -->
             <Style.Triggers>
                 <Trigger Property="IsEnabled" Value="False">
                     <Setter Property="Background" Value="#4A3285" />
@@ -78,46 +87,205 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <Style x:Key="PaginationButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Margin" Value="3" />
+        </Style>
+
+        <Style x:Key="PageNumberStyle" TargetType="TextBox">
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Margin" Value="3" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="#2E2E2E" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#6B46C1" />
+        </Style>
+        <Style x:Key="CustomComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Background" Value="#2E2E2E"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="BorderBrush" Value="#6B46C1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <Grid.Resources>
+                                <!-- Style pour les éléments dans la liste déroulante -->
+                                <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#2E2E2E"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#6B46C1"/>
+                            </Grid.Resources>
+                            <ToggleButton x:Name="ToggleButton"
+                                  Focusable="false"
+                                  IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                  ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Border" 
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="20"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}" 
+                                                        Content="{TemplateBinding Content}"
+                                                        ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                        Margin="{TemplateBinding Padding}"
+                                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                                <Path x:Name="Arrow" 
+                                            Grid.Column="1"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Data="M0,0 L5,5 L10,0"
+                                            Fill="White"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter Property="Background" Value="#3A3A3A"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#3A3A3A"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="ContentPresenter"
+                                    Content="{TemplateBinding SelectionBoxItem}"
+                                    ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                    ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
+                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                    IsHitTestVisible="False"
+                                    Margin="{TemplateBinding Padding}"
+                                    SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                    VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                            <Popup x:Name="PART_Popup"
+                        AllowsTransparency="True"
+                        Focusable="False"
+                        IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                        PopupAnimation="Slide"
+                        Placement="Bottom">
+                                <Border x:Name="DropDownBorder"
+                                Background="#2E2E2E"
+                                BorderBrush="#6B46C1"
+                                BorderThickness="1"
+                                MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                MinWidth="{Binding ActualWidth, ElementName=ToggleButton}">
+                                    <ScrollViewer x:Name="DropDownScrollViewer">
+                                        <ItemsPresenter x:Name="ItemsPresenter"
+                                              KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Background" Value="#2E2E2E"/>
+                        <Setter Property="Foreground" Value="White"/>
+                        <Setter Property="Padding" Value="5"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#6B46C1"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#6B46C1"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Page.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <DataGrid ItemsSource="{Binding Reports}"
+
+        <!-- En-tête avec filtres -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10" HorizontalAlignment="Center">
+            <TextBlock Text="Filtrer par statut:" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <ComboBox ItemsSource="{Binding Source={StaticResource ReportStatusValues}}"
+          SelectedItem="{Binding SelectedStatus}" 
+          Width="200"
+          Style="{StaticResource CustomComboBoxStyle}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+
+        <!-- DataGrid principal -->
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Reports}"
                   SelectedItem="{Binding SelectedReport, Mode=TwoWay}"
-                  AutoGenerateColumns="False"
+                  Style="{StaticResource StyledDataGrid}"
                   CellStyle="{StaticResource CenteredCellStyle}"
                   Margin="10"
-                  Style="{StaticResource StyledDataGrid}"
-                  SelectionMode="Single">
+                  SelectionMode="Single"
+                  Visibility="{Binding DataGridVisibility}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
-                <DataGridTextColumn Header="Reporter" Binding="{Binding ReporterName}" Width="150"/>
-                <DataGridTextColumn Header="Utilisateur signalé" Binding="{Binding ReportedUserName}" Width="150"/>
-                <DataGridTextColumn Header="Type de Report" Binding="{Binding TypeReportName}" Width="150"/>
-                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="200"/>
+                <DataGridTextColumn Header="Reporter" Binding="{Binding Reporter.Nom}" Width="150"/>
+                <DataGridTextColumn Header="Utilisateur signalé" Binding="{Binding ReportedUser.Nom}" Width="150"/>
+                <DataGridTextColumn Header="Type de Report" Binding="{Binding TypeReport.Name}" Width="150"/>
                 <DataGridTextColumn Header="Statut" Binding="{Binding Status}" Width="100"/>
                 <DataGridTextColumn Header="Date de création" Binding="{Binding CreatedAt, StringFormat=\{0:dd/MM/yyyy\}}" Width="150"/>
             </DataGrid.Columns>
         </DataGrid>
-        <fa:ImageAwesome Icon="Spinner" Visibility="{Binding LoadingVisibility}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White" />
-        <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Center" Margin="10">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
-                <Button Command="{Binding ShowEditPopupCommand}" Style="{StaticResource ActionButtonStyle}">
-                    <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome Icon="Edit" Foreground="White" Width="16" Height="16" />
-                        <TextBlock Text=" Modifier" Margin="5,0,0,0" />
-                    </StackPanel>
-                </Button>
-                <Button Command="{Binding ShowDeletePopupCommand}" 
-                        Style="{StaticResource ActionButtonStyle}">
-                    <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome Icon="Trash" Foreground="White" Width="16" Height="16" />
-                        <TextBlock Text=" Supprimer" Margin="5,0,0,0" />
-                    </StackPanel>
-                </Button>
-            </StackPanel>
+
+        <!-- Indicateur de chargement -->
+        <fa:ImageAwesome Grid.Row="1" 
+                         Icon="Spinner" 
+                         Spin="True"
+                         SpinDuration="1"
+                         Width="50" Height="50"
+                         Visibility="{Binding LoadingVisibility}" 
+                         VerticalAlignment="Center" 
+                         HorizontalAlignment="Center" 
+                         Foreground="White" />
+
+        <!-- Contrôles de pagination -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <Button Command="{Binding LoadPreviousPageCommand}" 
+                    Style="{StaticResource PaginationButtonStyle}"
+                    IsEnabled="{Binding CanLoadPreviousPage}">
+                <fa:ImageAwesome Icon="ArrowLeft" Foreground="White" Width="14" Height="14" />
+            </Button>
+            <TextBox Text="{Binding SelectedPageIndex, UpdateSourceTrigger=PropertyChanged}" 
+                     Style="{StaticResource PageNumberStyle}"/>
+            <TextBlock Text="/" Foreground="White" VerticalAlignment="Center" Margin="3"/>
+            <TextBlock Text="{Binding TotalPages}" Foreground="White" VerticalAlignment="Center" Margin="3"/>
+            <Button Command="{Binding GoToPageCommand}" 
+                    Style="{StaticResource PaginationButtonStyle}"
+                    Content="OK"/>
+            <Button Command="{Binding LoadNextPageCommand}" 
+                    Style="{StaticResource PaginationButtonStyle}"
+                    IsEnabled="{Binding CanLoadNextPage}">
+                <fa:ImageAwesome Icon="ArrowRight" Foreground="White" Width="14" Height="14" />
+            </Button>
         </StackPanel>
     </Grid>
 </Page>

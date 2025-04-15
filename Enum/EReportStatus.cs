@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GetOutAdminV2.Enum
 {
-    enum EReportStatus
+    public enum EReportStatus
     {
         pending,
         investigating,

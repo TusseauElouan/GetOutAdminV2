@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace GetOutAdminV2.Models;
 
-public partial class AppDbContext : DbContext
+public partial class GetoutContext : DbContext
 {
+    public GetoutContext()
+    {
+    }
 
-    private readonly IConfiguration _configuration;
-    public AppDbContext(DbContextOptions<AppDbContext> options, IConfiguration configuration)
+    public GetoutContext(DbContextOptions<GetoutContext> options)
         : base(options)
     {
-        _configuration = configuration;
     }
 
     public virtual DbSet<Cache> Caches { get; set; }
@@ -40,8 +39,6 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<PrivateMessage> PrivateMessages { get; set; }
 
-    public virtual DbSet<ReportServer> ReportServers { get; set; }
-
     public virtual DbSet<ReportUser> ReportUsers { get; set; }
 
     public virtual DbSet<Server> Servers { get; set; }
@@ -52,8 +49,6 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Session> Sessions { get; set; }
 
-    public virtual DbSet<TypeReportServer> TypeReportServers { get; set; }
-
     public virtual DbSet<TypeReportUser> TypeReportUsers { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
@@ -61,14 +56,8 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<UsersRelation> UsersRelations { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (!optionsBuilder.IsConfigured)
-        {
-            string connectionString = _configuration.GetConnectionString("DefaultConnection");
-            optionsBuilder.UseNpgsql(connectionString);
-        }
-        
-    }
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseNpgsql("Host=10.192.121.19;Port=5432;Database=getout;Username=getout;Password=Not24get;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -403,46 +392,6 @@ public partial class AppDbContext : DbContext
                 .HasConstraintName("private_messages_sender_id_foreign");
         });
 
-        modelBuilder.Entity<ReportServer>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("report_servers_pkey");
-
-            entity.ToTable("report_servers");
-
-            entity.HasIndex(e => new { e.ReporterId, e.ServerId, e.TypeReportId }, "unique_server_report").IsUnique();
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("created_at");
-            entity.Property(e => e.DeletedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("deleted_at");
-            entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.Evidence)
-                .HasColumnType("json")
-                .HasColumnName("evidence");
-            entity.Property(e => e.ReporterId).HasColumnName("reporter_id");
-            entity.Property(e => e.ResolutionNote).HasColumnName("resolution_note");
-            entity.Property(e => e.ResolvedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("resolved_at");
-            entity.Property(e => e.ResolvedBy).HasColumnName("resolved_by");
-            entity.Property(e => e.ServerId).HasColumnName("server_id");
-            entity.Property(e => e.Status)
-                .HasMaxLength(255)
-                .HasDefaultValueSql("'pending'::character varying")
-                .HasColumnName("status");
-            entity.Property(e => e.TypeReportId).HasColumnName("type_report_id");
-            entity.Property(e => e.UpdatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("updated_at");
-            entity.HasOne(d => d.TypeReport).WithMany(p => p.ReportServers)
-                .HasForeignKey(d => d.TypeReportId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("report_servers_type_report_id_foreign");
-        });
-
         modelBuilder.Entity<ReportUser>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("report_users_pkey");
@@ -459,7 +408,6 @@ public partial class AppDbContext : DbContext
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("deleted_at");
             entity.Property(e => e.Description).HasColumnName("description");
-            
             entity.Property(e => e.ReportedUserId).HasColumnName("reported_user_id");
             entity.Property(e => e.ReporterId).HasColumnName("reporter_id");
             entity.Property(e => e.ResolutionNote).HasColumnName("resolution_note");
@@ -645,30 +593,6 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.UserId).HasColumnName("user_id");
         });
 
-        modelBuilder.Entity<TypeReportServer>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("type_report_servers_pkey");
-
-            entity.ToTable("type_report_servers");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Active)
-                .HasDefaultValue(true)
-                .HasColumnName("active");
-            entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("created_at");
-            entity.Property(e => e.Description)
-                .HasMaxLength(255)
-                .HasColumnName("description");
-            entity.Property(e => e.Name)
-                .HasMaxLength(255)
-                .HasColumnName("name");
-            entity.Property(e => e.UpdatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("updated_at");
-        });
-
         modelBuilder.Entity<TypeReportUser>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("type_report_users_pkey");
@@ -716,6 +640,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.EmailVerifiedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("email_verified_at");
+            entity.Property(e => e.IsAdmin).HasColumnName("isAdmin");
             entity.Property(e => e.LastTagChange)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("last_tag_change");

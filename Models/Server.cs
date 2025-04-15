@@ -29,8 +29,6 @@ public partial class Server
 
     public virtual User Owner { get; set; } = null!;
 
-    public virtual ICollection<ReportServer> ReportServers { get; set; } = new List<ReportServer>();
-
     public virtual ICollection<ServerInvite> ServerInvites { get; set; } = new List<ServerInvite>();
 
     public virtual ICollection<ServerMember> ServerMembers { get; set; } = new List<ServerMember>();

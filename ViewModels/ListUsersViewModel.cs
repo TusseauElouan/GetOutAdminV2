@@ -57,6 +57,7 @@ namespace GetOutAdminV2.ViewModels
 
         [ObservableProperty]
         private string? _errorMessage = string.Empty;
+
         [ObservableProperty]
         private bool _isPopupNotOpen;
 
@@ -82,7 +83,7 @@ namespace GetOutAdminV2.ViewModels
         public ListUsersViewModel()
         {
             _userManager = ServiceLocator.GetRequiredService<IUserManager>();
-            Users = new ObservableCollection<User> (_userManager.ListOfUsers);
+            Users = new ObservableCollection<User>(_userManager.ListOfUsers);
             LoadNextPageCommand = new RelayCommand(LoadNextPage);
             LoadPreviousPageCommand = new RelayCommand(LoadPreviousPage);
             GoToPageCommand = new RelayCommand(GoToPage);
@@ -101,6 +102,7 @@ namespace GetOutAdminV2.ViewModels
             TotalPages = (int)Math.Ceiling((double)_totalUsers / PageSize);
             LoadNextPage();
         }
+
         // Méthode exécutée lorsque SelectedUser change
         partial void OnSelectedUserChanged(User? oldValue, User? newValue)
         {
@@ -118,7 +120,7 @@ namespace GetOutAdminV2.ViewModels
 
         private void ShowEditPopup()
         {
-            if (IsDeletePopupOpen || SelectedUser == null) return;
+            if (IsEditPopupOpen || SelectedUser == null) return;
             IsPopupNotOpen = false;
             IsEditPopupOpen = true;
         }

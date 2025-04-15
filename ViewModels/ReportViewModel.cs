@@ -21,6 +21,8 @@ namespace GetOutAdminV2.ViewModels
         private int _totalReports; // Nombre total de rapports
 
         private readonly IReportManager _reportManager;
+        private readonly IUserManager _userManager;
+        private readonly ITypeReportManager _typeReportManager;
 
         public ObservableCollection<ReportUser> Reports { get; }
 
@@ -53,6 +55,7 @@ namespace GetOutAdminV2.ViewModels
 
         [ObservableProperty]
         private string? _errorMessage = string.Empty;
+
         [ObservableProperty]
         private bool _isPopupNotOpen;
 
@@ -61,6 +64,9 @@ namespace GetOutAdminV2.ViewModels
 
         [ObservableProperty]
         private string _dataGridVisibility = nameof(EVisibility.Visible);
+
+        [ObservableProperty]
+        private EReportStatus _selectedStatus;
 
         public IRelayCommand LoadNextPageCommand { get; }
         public IRelayCommand LoadPreviousPageCommand { get; }
@@ -75,56 +81,44 @@ namespace GetOutAdminV2.ViewModels
         public ReportViewModel()
         {
             _reportManager = ServiceLocator.GetRequiredService<IReportManager>();
-            Reports = new (_reportManager.GetReportPendingOrInvestigating());
+            _userManager = ServiceLocator.GetRequiredService<IUserManager>();
+            _typeReportManager = ServiceLocator.GetRequiredService<ITypeReportManager>();
+            _reportManager.GetAllReports();
+            Reports = new (_reportManager.ListOfReports);
+
+            LoadReports(); // Charge initialement les rapports avec les statuts filtrés
             LoadNextPageCommand = new RelayCommand(LoadNextPage);
             LoadPreviousPageCommand = new RelayCommand(LoadPreviousPage);
             GoToPageCommand = new RelayCommand(GoToPage);
 
-            // Commandes pour la gestion de la suppression
-            ShowDeletePopupCommand = new RelayCommand(ShowDeletePopup, () => SelectedReport != null);
-            ConfirmDeleteCommand = new RelayCommand(ConfirmDelete);
-            CancelDeleteCommand = new RelayCommand(CancelDelete);
-
-            _totalReports = _reportManager.ListOfReports.Count;
-            TotalPages = (int)Math.Ceiling((double)_totalReports / PageSize);
-            LoadNextPage();
-        }
-
-        // Méthode exécutée lorsque SelectedReport change
-        partial void OnSelectedReportChanged(ReportUser? oldValue, ReportUser? newValue)
-        {
-            // Notifier les commandes de vérifier à nouveau leurs conditions d'activation
-            (ShowDeletePopupCommand as RelayCommand)?.NotifyCanExecuteChanged();
-        }
-
-        private void ShowDeletePopup()
-        {
-            if (IsDeletePopupOpen || SelectedReport == null) return;
-            IsPopupNotOpen = false;
-            IsDeletePopupOpen = true;
-        }
-        private void ConfirmDelete()
-        {
-            if (SelectedReport == null) return;
-
-            LoadingVisibility = nameof(EVisibility.Visible);
-            DataGridVisibility = nameof(EVisibility.Hidden);
-            _reportManager.DeleteReport(SelectedReport.Id);
-            Reports.Remove(SelectedReport);
-            SelectedReport = null;
-            IsDeletePopupOpen = false;
-
-            LoadingVisibility = nameof(EVisibility.Hidden);
-            DataGridVisibility = nameof(EVisibility.Visible);
-
             _totalReports = _reportManager.ListOfReports.Count;
             TotalPages = (int)Math.Ceiling((double)_totalReports / PageSize);
             LoadReportsForPage(_currentPage);
+            var test = Reports;
         }
 
-        private void CancelDelete()
+        partial void OnSelectedStatusChanged(EReportStatus value)
         {
-            IsDeletePopupOpen = false;
+            LoadReports(); // Recharger les rapports quand le statut change
+        }
+
+        private void LoadReports()
+        {
+            // Filtrer les rapports selon le statut sélectionné
+            var filteredReports = _reportManager.ListOfReports
+                                                 .Where(report => report.Status == SelectedStatus.ToString())
+                                                 .ToList();
+
+            Reports.Clear();
+            foreach (var report in filteredReports)
+            {
+                // Remplacer les IDs par les noms
+                report.ReportedUser = new User() { Nom = _userManager.GetUserById(report.ReportedUserId)?.Nom ?? "Utilisateur inconnu" };
+                report.Reporter = new User() { Nom = _userManager.GetUserById(report.ReporterId)?.Nom ?? "Utilisateur inconnu" };
+                report.TypeReport = new TypeReportUser() { Name = _typeReportManager.GetTypeReportById(report.TypeReportId).Name ?? "Type de signalement inconnu" }; 
+
+                Reports.Add(report);
+            }
         }
 
         private IEnumerable<ReportUser> GetReports(int startIndex, int count) => _reportManager.ListOfReports.Skip(startIndex).Take(count);

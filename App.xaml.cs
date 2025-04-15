@@ -48,6 +48,8 @@ namespace GetOutAdminV2._0
                     services.AddSingleton<IUserManager, UserManager>();
                     services.AddSingleton<IReportProvider, ReportProvider>();
                     services.AddSingleton<IReportManager, ReportManager>();
+                    services.AddSingleton<ITypeReportProvider, TypeReportProvider>();
+                    services.AddSingleton<ITypeReportManager, TypeReportManager>();
                     //services.AddSingleton<LogInViewModel>();
                     services.AddSingleton<MainWindow>();
                     services.AddSingleton<NavigationViewModel>();

@@ -27,6 +27,8 @@ public partial class User
 
     public DateTime? LastTagChange { get; set; }
 
+    public bool IsAdmin { get; set; }
+
     public string? RememberToken { get; set; }
 
     public DateTime? CreatedAt { get; set; }
@@ -42,10 +44,6 @@ public partial class User
     public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
 
     public virtual ICollection<PrivateMessage> PrivateMessages { get; set; } = new List<PrivateMessage>();
-
-    public virtual ICollection<ReportServer> ReportServerReporters { get; set; } = new List<ReportServer>();
-
-    public virtual ICollection<ReportServer> ReportServerResolvedByNavigations { get; set; } = new List<ReportServer>();
 
     public virtual ICollection<ReportUser> ReportUserReportedUsers { get; set; } = new List<ReportUser>();
 
