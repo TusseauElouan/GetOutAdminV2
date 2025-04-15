@@ -7,10 +7,18 @@
       xmlns:vm="clr-namespace:GetOutAdminV2.ViewModels"
       xmlns:fa="http://schemas.fontawesome.io/icons/"
       xmlns:converters="clr-namespace:GetOutAdminV2.Converters"
+      xmlns:enum="clr-namespace:GetOutAdminV2.Enum"
       mc:Ignorable="d"
       Title="ListUserPage"
       Background="#1A1A1A">
     <Page.Resources>
+        <!-- Convertisseur d'énumération pour les durées de sanction -->
+        <ObjectDataProvider x:Key="SanctionDurationValues" MethodName="GetValues" ObjectType="{x:Type enum:ESanctionDuration}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="enum:ESanctionDuration"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
         <Style x:Key="CenteredCellStyle" TargetType="DataGridCell">
             <Setter Property="Template">
                 <Setter.Value>
@@ -122,9 +130,22 @@
             <Setter Property="Margin" Value="0,0,0,10" />
         </Style>
 
+        <!-- Style pour ComboBox -->
+        <Style x:Key="CustomComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Background" Value="#2E2E2E"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#6B46C1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Height" Value="40"/>
+        </Style>
+
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:ErrorBorderConverter x:Key="ErrorBorderConverter"/>
         <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+        <converters:SanctionDurationConverter x:Key="SanctionDurationConverter"/>
     </Page.Resources>
 
     <Grid>
@@ -156,11 +177,11 @@
                         <TextBlock Text=" Modifier" Margin="5,0,0,0" />
                     </StackPanel>
                 </Button>
-                <Button Command="{Binding ShowDeletePopupCommand}" 
+                <Button Command="{Binding ShowSanctionPopupCommand}" 
                         Style="{StaticResource ActionButtonStyle}">
                     <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome Icon="Trash" Foreground="White" Width="16" Height="16" />
-                        <TextBlock Text=" Supprimer" Margin="5,0,0,0" />
+                        <fa:ImageAwesome Icon="Ban" Foreground="White" Width="16" Height="16" />
+                        <TextBlock Text=" Sanctionner" Margin="5,0,0,0" />
                     </StackPanel>
                 </Button>
             </StackPanel>
@@ -185,9 +206,9 @@
             </StackPanel>
         </StackPanel>
 
-        <!-- Popup de confirmation de suppression -->
-        <Popup IsOpen="{Binding IsDeletePopupOpen}" Placement="Center" StaysOpen="False">
-            <Border Background="#2A2A2A" Width="400" Height="250" CornerRadius="10" Padding="20" BorderBrush="#6B46C1" BorderThickness="2">
+        <!-- Popup de sanction -->
+        <Popup IsOpen="{Binding IsSanctionPopupOpen}" Placement="Center" StaysOpen="False">
+            <Border Background="#2A2A2A" Width="450" Height="Auto" MinHeight="400" CornerRadius="10" Padding="20" BorderBrush="#6B46C1" BorderThickness="2">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -195,31 +216,61 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Confirmation de suppression" 
+                    <TextBlock Grid.Row="0" Text="Application d'une sanction" 
                                HorizontalAlignment="Center" VerticalAlignment="Top"
-                               Margin="10" FontSize="18" FontWeight="Bold" Foreground="White"/>
+                               Margin="10" FontSize="22" FontWeight="Bold" Foreground="White"/>
 
-                    <TextBlock Grid.Row="1" Text="Voulez-vous vraiment supprimer cet utilisateur ?" 
-                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                               TextWrapping="Wrap" TextAlignment="Center"
-                               Margin="10" FontSize="14" Foreground="White"/>
+                    <Border Grid.Row="1" Background="#FFE0E0" CornerRadius="4" Padding="10" Margin="20,0,20,15" BorderThickness="1" BorderBrush="#FFB0B0" Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="#D32F2F" TextWrapping="Wrap" FontSize="14"/>
+                    </Border>
+
+                    <Border Grid.Row="1" Background="#222222" CornerRadius="15" Margin="20,50,20,20" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="Utilisateur à sanctionner :" FontSize="16" Foreground="White" Margin="0,0,0,10"/>
+                            <Border Background="#333333" CornerRadius="8" Padding="10" Margin="0,0,0,20">
+                                <TextBlock FontSize="16" Foreground="White">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0} {1}">
+                                            <Binding Path="SelectedUser.Prenom"/>
+                                            <Binding Path="SelectedUser.Nom"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </Border>
+
+                            <TextBlock Text="Durée de la sanction :" FontSize="16" Foreground="White" Margin="0,0,0,10"/>
+                            <ComboBox ItemsSource="{Binding Source={StaticResource SanctionDurationValues}}"
+                                      SelectedItem="{Binding SelectedSanctionDuration}"
+                                      Style="{StaticResource CustomComboBoxStyle}"
+                                      Margin="0,0,0,20">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource SanctionDurationConverter}}" Foreground="White"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
+                            <TextBlock Text="Motif de la sanction :" FontSize="16" Foreground="White" Margin="0,0,0,10"/>
+                            <TextBox Text="{Binding SanctionDescription, UpdateSourceTrigger=PropertyChanged}"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     Height="100"
+                                     Background="#333333"
+                                     Foreground="White"
+                                     BorderThickness="0"
+                                     Padding="10"/>
+                        </StackPanel>
+                    </Border>
 
                     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="20">
-                        <Button Content="Annuler" Width="100" Height="40"
-                                Command="{Binding CancelDeleteCommand}" 
-                                Background="Gray" Foreground="White"
-                                Margin="5" BorderThickness="0"/>
-
-                        <Button Content="Supprimer" Width="100" Height="40"
-                        Command="{Binding ConfirmDeleteCommand}" 
-                        Background="#E53E3E" Foreground="White"
-                        BorderBrush="#E53E3E" BorderThickness="1"
-                        Margin="5"/>
+                        <Button Content="Annuler" Width="120" Height="40" Command="{Binding CancelSanctionCommand}" Background="Gray" Foreground="White" Margin="5" BorderThickness="0"/>
+                        <Button Content="Appliquer" Command="{Binding ConfirmSanctionCommand}" Background="#E53E3E" Foreground="White" BorderBrush="#E53E3E" BorderThickness="1" Margin="5" Width="120" Height="40"/>
                     </StackPanel>
                 </Grid>
             </Border>
         </Popup>
 
+        <!-- Popup d'édition -->
         <Popup IsOpen="{Binding IsEditPopupOpen}" Placement="Center" StaysOpen="False">
             <Border Background="#2A2A2A" Width="500" Height="Auto" CornerRadius="10" Padding="20" BorderBrush="#6B46C1" BorderThickness="2">
                 <Grid>

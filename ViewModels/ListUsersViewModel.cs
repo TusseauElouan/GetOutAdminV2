@@ -25,6 +25,8 @@ namespace GetOutAdminV2.ViewModels
         private int _totalUsers; // Nombre total d'utilisateurs
 
         private readonly IUserManager _userManager;
+        private readonly ISanctionManager _sanctionManager;
+        private readonly ITypeReportManager _typeReportManager;
 
         public ObservableCollection<User> Users { get; }
 
@@ -32,7 +34,7 @@ namespace GetOutAdminV2.ViewModels
         private User? selectedUser;
 
         [ObservableProperty]
-        private bool isDeletePopupOpen;
+        private bool isSanctionPopupOpen;
 
         [ObservableProperty]
         private bool canLoadPreviousPage;
@@ -67,31 +69,42 @@ namespace GetOutAdminV2.ViewModels
         [ObservableProperty]
         private string _dataGridVisibility = nameof(EVisibility.Visible);
 
+        [ObservableProperty]
+        private ESanctionDuration _selectedSanctionDuration = ESanctionDuration.TwoWeeks;
+
+        [ObservableProperty]
+        private string _sanctionDescription = string.Empty;
+
+        public IEnumerable<ESanctionDuration> SanctionDurations => System.Enum.GetValues(typeof(ESanctionDuration)).Cast<ESanctionDuration>();
+
         public IRelayCommand LoadNextPageCommand { get; }
         public IRelayCommand LoadPreviousPageCommand { get; }
         public IRelayCommand GoToPageCommand { get; }
-        public IRelayCommand ShowDeletePopupCommand { get; }
+        public IRelayCommand ShowSanctionPopupCommand { get; }
         public IRelayCommand ShowEditPopupCommand { get; }
-        public IRelayCommand ConfirmDeleteCommand { get; }
-        public IRelayCommand CancelDeleteCommand { get; }
+        public IRelayCommand ConfirmSanctionCommand { get; }
+        public IRelayCommand CancelSanctionCommand { get; }
         public IRelayCommand CancelEditCommand { get; }
         public IRelayCommand ConfirmEditUserCommand { get; }
 
         // Propriété pour vérifier si un utilisateur est sélectionné
-        public bool CanDeleteUser => SelectedUser != null;
+        public bool CanSanctionUser => SelectedUser != null;
 
         public ListUsersViewModel()
         {
             _userManager = ServiceLocator.GetRequiredService<IUserManager>();
+            _sanctionManager = ServiceLocator.GetRequiredService<ISanctionManager>();
+            _typeReportManager = ServiceLocator.GetRequiredService<ITypeReportManager>();
+
             Users = new ObservableCollection<User>(_userManager.ListOfUsers);
             LoadNextPageCommand = new RelayCommand(LoadNextPage);
             LoadPreviousPageCommand = new RelayCommand(LoadPreviousPage);
             GoToPageCommand = new RelayCommand(GoToPage);
 
-            // Commandes pour la gestion de la suppression
-            ShowDeletePopupCommand = new RelayCommand(ShowDeletePopup, () => SelectedUser != null);
-            ConfirmDeleteCommand = new RelayCommand(ConfirmDelete);
-            CancelDeleteCommand = new RelayCommand(CancelDelete);
+            // Commandes pour la gestion des sanctions
+            ShowSanctionPopupCommand = new RelayCommand(ShowSanctionPopup, () => SelectedUser != null);
+            ConfirmSanctionCommand = new RelayCommand(ConfirmSanction);
+            CancelSanctionCommand = new RelayCommand(CancelSanction);
 
             // Commande pour la modification d'un utilisateur
             ShowEditPopupCommand = new RelayCommand(ShowEditPopup, () => SelectedUser != null);
@@ -107,15 +120,29 @@ namespace GetOutAdminV2.ViewModels
         partial void OnSelectedUserChanged(User? oldValue, User? newValue)
         {
             // Notifier les commandes de vérifier à nouveau leurs conditions d'activation
-            (ShowDeletePopupCommand as RelayCommand)?.NotifyCanExecuteChanged();
+            (ShowSanctionPopupCommand as RelayCommand)?.NotifyCanExecuteChanged();
             (ShowEditPopupCommand as RelayCommand)?.NotifyCanExecuteChanged();
         }
 
-        private void ShowDeletePopup()
+        private void ShowSanctionPopup()
         {
-            if (IsDeletePopupOpen || SelectedUser == null) return;
+            if (IsSanctionPopupOpen || SelectedUser == null) return;
             IsPopupNotOpen = false;
-            IsDeletePopupOpen = true;
+
+            // Vérifier si l'utilisateur a déjà une sanction active
+            var activeSanction = _sanctionManager.GetActiveSanctionByUserId(SelectedUser.Id);
+            if (activeSanction != null)
+            {
+                string endDate = activeSanction.IsPermanent ? "permanente" : $"jusqu'au {activeSanction.EndAt?.ToString("dd/MM/yyyy")}";
+                MessageBox.Show($"Cet utilisateur a déjà une sanction active {endDate}.", "Sanction existante", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // Réinitialiser les valeurs
+            SelectedSanctionDuration = ESanctionDuration.TwoWeeks;
+            SanctionDescription = string.Empty;
+
+            IsSanctionPopupOpen = true;
         }
 
         private void ShowEditPopup()
@@ -125,28 +152,71 @@ namespace GetOutAdminV2.ViewModels
             IsEditPopupOpen = true;
         }
 
-        private void ConfirmDelete()
+        private void ConfirmSanction()
         {
             if (SelectedUser == null) return;
 
-            LoadingVisibility = nameof(EVisibility.Visible);
-            DataGridVisibility = nameof(EVisibility.Hidden);
-            _userManager.DeleteUser(SelectedUser.Id);
-            Users.Remove(SelectedUser);
-            SelectedUser = null;
-            IsDeletePopupOpen = false;
+            try
+            {
+                LoadingVisibility = nameof(EVisibility.Visible);
+                DataGridVisibility = nameof(EVisibility.Hidden);
 
-            LoadingVisibility = nameof(EVisibility.Hidden);
-            DataGridVisibility = nameof(EVisibility.Visible);
+                // Créer la nouvelle sanction
+                var now = DateTime.Now;
 
-            _totalUsers = _userManager.ListOfUsers.Count;
-            TotalPages = (int)Math.Ceiling((double)_totalUsers / PageSize);
-            LoadUsersForPage(_currentPage);
+                // Trouver un type de rapport approprié (nous utilisons le premier par défaut)
+                var typeReport = _typeReportManager.ListOfTypeReports.FirstOrDefault();
+                if (typeReport == null)
+                {
+                    // Si aucun type n'existe, charger les types
+                    _typeReportManager.GetAllTypeReports();
+                    typeReport = _typeReportManager.ListOfTypeReports.FirstOrDefault();
+
+                    if (typeReport == null)
+                    {
+                        MessageBox.Show("Aucun type de rapport trouvé dans la base de données.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                }
+
+                var sanction = new SanctionsUser
+                {
+                    UserId = SelectedUser.Id,
+                    TypeReportUsersId = typeReport.Id,
+                    Description = SanctionDescription,
+                    Status = "active",
+                    StartAt = now,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    IsPermanent = SelectedSanctionDuration == ESanctionDuration.Permanent
+                };
+
+                // Calculer la date de fin en fonction de la durée sélectionnée
+                if (SelectedSanctionDuration != ESanctionDuration.Permanent)
+                {
+                    sanction.EndAt = SelectedSanctionDuration.CalculateEndDate(now);
+                }
+
+                _sanctionManager.AddSanction(sanction);
+
+                MessageBox.Show($"L'utilisateur {SelectedUser.Prenom} {SelectedUser.Nom} a été sanctionné avec succès.", "Sanction appliquée", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                IsSanctionPopupOpen = false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'application de la sanction : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                LoadingVisibility = nameof(EVisibility.Hidden);
+                DataGridVisibility = nameof(EVisibility.Visible);
+            }
         }
 
-        private void CancelDelete()
+        private void CancelSanction()
         {
-            IsDeletePopupOpen = false;
+            IsSanctionPopupOpen = false;
         }
 
         private void CancelEdit()

@@ -6,6 +6,7 @@
       xmlns:local="clr-namespace:GetOutAdminV2.Views"
       xmlns:enum="clr-namespace:GetOutAdminV2.Enum"
       xmlns:fa="http://schemas.fontawesome.io/icons/"
+      xmlns:converters="clr-namespace:GetOutAdminV2.Converters"
       mc:Ignorable="d" 
       d:DesignHeight="650" d:DesignWidth="800"
       Title="ReportPage"
@@ -15,6 +16,13 @@
         <ObjectDataProvider x:Key="ReportStatusValues" MethodName="GetValues" ObjectType="{x:Type enum:EReportStatus}">
             <ObjectDataProvider.MethodParameters>
                 <x:Type TypeName="enum:EReportStatus"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
+        <!-- Convertisseur d'énumération pour les durées de sanction -->
+        <ObjectDataProvider x:Key="SanctionDurationValues" MethodName="GetValues" ObjectType="{x:Type enum:ESanctionDuration}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="enum:ESanctionDuration"/>
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
 
@@ -104,12 +112,16 @@
             <Setter Property="Foreground" Value="White" />
             <Setter Property="BorderBrush" Value="#6B46C1" />
         </Style>
+
         <Style x:Key="CustomComboBoxStyle" TargetType="ComboBox">
             <Setter Property="Background" Value="#2E2E2E"/>
-            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderBrush" Value="#6B46C1"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="5"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Height" Value="40"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
@@ -213,10 +225,16 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:ErrorBorderConverter x:Key="ErrorBorderConverter"/>
+        <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+        <converters:SanctionDurationConverter x:Key="SanctionDurationConverter"/>
     </Page.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
@@ -232,14 +250,25 @@
           Style="{StaticResource CustomComboBoxStyle}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding}" />
+                        <TextBlock Text="{Binding}" Foreground="White" />
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </StackPanel>
 
+        <!-- Bouton pour sanctionner -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10,0,10,10">
+            <Button Command="{Binding ShowSanctionPopupCommand}" 
+                    Style="{StaticResource ActionButtonStyle}">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Ban" Foreground="White" Width="16" Height="16" />
+                    <TextBlock Text=" Sanctionner l'utilisateur signalé" Margin="5,0,0,0" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
         <!-- DataGrid principal -->
-        <DataGrid Grid.Row="1"
+        <DataGrid Grid.Row="2"
                   ItemsSource="{Binding Reports}"
                   SelectedItem="{Binding SelectedReport, Mode=TwoWay}"
                   Style="{StaticResource StyledDataGrid}"
@@ -257,7 +286,7 @@
         </DataGrid>
 
         <!-- Indicateur de chargement -->
-        <fa:ImageAwesome Grid.Row="1" 
+        <fa:ImageAwesome Grid.Row="2" 
                          Icon="Spinner" 
                          Spin="True"
                          SpinDuration="1"
@@ -268,7 +297,7 @@
                          Foreground="White" />
 
         <!-- Contrôles de pagination -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
             <Button Command="{Binding LoadPreviousPageCommand}" 
                     Style="{StaticResource PaginationButtonStyle}"
                     IsEnabled="{Binding CanLoadPreviousPage}">
@@ -287,5 +316,62 @@
                 <fa:ImageAwesome Icon="ArrowRight" Foreground="White" Width="14" Height="14" />
             </Button>
         </StackPanel>
+
+        <!-- Popup de sanction -->
+        <Popup IsOpen="{Binding IsSanctionPopupOpen}" Placement="Center" StaysOpen="False">
+            <Border Background="#2A2A2A" Width="450" Height="Auto" MinHeight="400" CornerRadius="10" Padding="20" BorderBrush="#6B46C1" BorderThickness="2">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Application d'une sanction" 
+                               HorizontalAlignment="Center" VerticalAlignment="Top"
+                               Margin="10" FontSize="22" FontWeight="Bold" Foreground="White"/>
+
+                    <Border Grid.Row="1" Background="#FFE0E0" CornerRadius="4" Padding="10" Margin="20,0,20,15" BorderThickness="1" BorderBrush="#FFB0B0" Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="#D32F2F" TextWrapping="Wrap" FontSize="14"/>
+                    </Border>
+
+                    <Border Grid.Row="1" Background="#222222" CornerRadius="15" Margin="20,50,20,20" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="Utilisateur à sanctionner :" FontSize="16" Foreground="White" Margin="0,0,0,10"/>
+                            <Border Background="#333333" CornerRadius="8" Padding="10" Margin="0,0,0,20">
+                                <TextBlock FontSize="16" Foreground="White" Text="{Binding SelectedReport.ReportedUser.Nom}"/>
+                            </Border>
+
+                            <TextBlock Text="Durée de la sanction :" FontSize="16" Foreground="White" Margin="0,0,0,10"/>
+                            <ComboBox ItemsSource="{Binding Source={StaticResource SanctionDurationValues}}"
+                                      SelectedItem="{Binding SelectedSanctionDuration}"
+                                      Style="{StaticResource CustomComboBoxStyle}"
+                                      Margin="0,0,0,20">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource SanctionDurationConverter}}" Foreground="White"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
+                            <TextBlock Text="Motif de la sanction :" FontSize="16" Foreground="White" Margin="0,0,0,10"/>
+                            <TextBox Text="{Binding SanctionDescription, UpdateSourceTrigger=PropertyChanged}"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     Height="100"
+                                     Background="#333333"
+                                     Foreground="White"
+                                     BorderThickness="0"
+                                     Padding="10"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="20">
+                        <Button Content="Annuler" Width="120" Height="40" Command="{Binding CancelSanctionCommand}" Background="Gray" Foreground="White" Margin="5" BorderThickness="0"/>
+                        <Button Content="Appliquer" Command="{Binding ConfirmSanctionCommand}" Background="#E53E3E" Foreground="White" BorderBrush="#E53E3E" BorderThickness="1" Margin="5" Width="120" Height="40"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Popup>
     </Grid>
 </Page>
