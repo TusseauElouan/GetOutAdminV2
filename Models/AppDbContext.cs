@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace GetOutAdminV2.Models;
 
 public partial class AppDbContext : DbContext
 {
+    public AppDbContext()
+    {
+    }
 
-    private readonly IConfiguration _configuration;
-    public AppDbContext(DbContextOptions<AppDbContext> options, IConfiguration configuration)
+    public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
     {
-        _configuration = configuration;
     }
 
     public virtual DbSet<Cache> Caches { get; set; }
@@ -23,8 +22,6 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Channel> Channels { get; set; }
 
     public virtual DbSet<ChannelMember> ChannelMembers { get; set; }
-
-    public virtual DbSet<Conversation> Conversations { get; set; }
 
     public virtual DbSet<FailedJob> FailedJobs { get; set; }
 
@@ -38,11 +35,9 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
-    public virtual DbSet<PrivateMessage> PrivateMessages { get; set; }
-
-    public virtual DbSet<ReportServer> ReportServers { get; set; }
-
     public virtual DbSet<ReportUser> ReportUsers { get; set; }
+
+    public virtual DbSet<SanctionsUser> SanctionsUsers { get; set; }
 
     public virtual DbSet<Server> Servers { get; set; }
 
@@ -52,8 +47,6 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Session> Sessions { get; set; }
 
-    public virtual DbSet<TypeReportServer> TypeReportServers { get; set; }
-
     public virtual DbSet<TypeReportUser> TypeReportUsers { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
@@ -61,14 +54,8 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<UsersRelation> UsersRelations { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (!optionsBuilder.IsConfigured)
-        {
-            string connectionString = _configuration.GetConnectionString("DefaultConnection");
-            optionsBuilder.UseNpgsql(connectionString);
-        }
-        
-    }
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseNpgsql("Host=10.192.121.19;Port=5432;Database=getout;Username=getout;Password=Not24get");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -168,39 +155,6 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.ChannelMembers)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("channel_members_user_id_foreign");
-        });
-
-        modelBuilder.Entity<Conversation>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("conversations_pkey");
-
-            entity.ToTable("conversations");
-
-            entity.HasIndex(e => new { e.User1Id, e.User2Id }, "conversations_user1_id_user2_id_unique").IsUnique();
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("created_at");
-            entity.Property(e => e.DeletedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("deleted_at");
-            entity.Property(e => e.LastMessageAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("last_message_at");
-            entity.Property(e => e.UpdatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("updated_at");
-            entity.Property(e => e.User1Id).HasColumnName("user1_id");
-            entity.Property(e => e.User2Id).HasColumnName("user2_id");
-
-            entity.HasOne(d => d.User1).WithMany(p => p.ConversationUser1s)
-                .HasForeignKey(d => d.User1Id)
-                .HasConstraintName("conversations_user1_id_foreign");
-
-            entity.HasOne(d => d.User2).WithMany(p => p.ConversationUser2s)
-                .HasForeignKey(d => d.User2Id)
-                .HasConstraintName("conversations_user2_id_foreign");
         });
 
         modelBuilder.Entity<FailedJob>(entity =>
@@ -355,94 +309,6 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("token");
         });
 
-        modelBuilder.Entity<PrivateMessage>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("private_messages_pkey");
-
-            entity.ToTable("private_messages");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Content).HasColumnName("content");
-            entity.Property(e => e.ConversationId).HasColumnName("conversation_id");
-            entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("created_at");
-            entity.Property(e => e.DeletedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("deleted_at");
-            entity.Property(e => e.DeletedByReceiverAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("deleted_by_receiver_at");
-            entity.Property(e => e.DeletedBySenderAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("deleted_by_sender_at");
-            entity.Property(e => e.EditedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("edited_at");
-            entity.Property(e => e.Metadata)
-                .HasColumnType("json")
-                .HasColumnName("metadata");
-            entity.Property(e => e.ReadAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("read_at");
-            entity.Property(e => e.SenderId).HasColumnName("sender_id");
-            entity.Property(e => e.Type)
-                .HasMaxLength(255)
-                .HasDefaultValueSql("'text'::character varying")
-                .HasColumnName("type");
-            entity.Property(e => e.UpdatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("updated_at");
-
-            entity.HasOne(d => d.Conversation).WithMany(p => p.PrivateMessages)
-                .HasForeignKey(d => d.ConversationId)
-                .HasConstraintName("private_messages_conversation_id_foreign");
-
-            entity.HasOne(d => d.Sender).WithMany(p => p.PrivateMessages)
-                .HasForeignKey(d => d.SenderId)
-                .HasConstraintName("private_messages_sender_id_foreign");
-        });
-
-        modelBuilder.Entity<ReportServer>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("report_servers_pkey");
-
-            entity.ToTable("report_servers");
-
-            entity.HasIndex(e => new { e.ReporterId, e.ServerId, e.TypeReportId }, "unique_server_report").IsUnique();
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("created_at");
-            entity.Property(e => e.DeletedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("deleted_at");
-            entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.Evidence)
-                .HasColumnType("json")
-                .HasColumnName("evidence");
-            entity.Property(e => e.ReporterId).HasColumnName("reporter_id");
-            entity.Property(e => e.ResolutionNote).HasColumnName("resolution_note");
-            entity.Property(e => e.ResolvedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("resolved_at");
-            entity.Property(e => e.ResolvedBy).HasColumnName("resolved_by");
-            entity.Property(e => e.ServerId).HasColumnName("server_id");
-            entity.Property(e => e.Status)
-                .HasMaxLength(255)
-                .HasDefaultValueSql("'pending'::character varying")
-                .HasColumnName("status");
-            entity.Property(e => e.TypeReportId).HasColumnName("type_report_id");
-            entity.Property(e => e.UpdatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("updated_at");
-            entity.HasOne(d => d.TypeReport).WithMany(p => p.ReportServers)
-                .HasForeignKey(d => d.TypeReportId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("report_servers_type_report_id_foreign");
-        });
-
         modelBuilder.Entity<ReportUser>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("report_users_pkey");
@@ -459,7 +325,6 @@ public partial class AppDbContext : DbContext
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("deleted_at");
             entity.Property(e => e.Description).HasColumnName("description");
-            
             entity.Property(e => e.ReportedUserId).HasColumnName("reported_user_id");
             entity.Property(e => e.ReporterId).HasColumnName("reporter_id");
             entity.Property(e => e.ResolutionNote).HasColumnName("resolution_note");
@@ -492,6 +357,45 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.TypeReportId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("report_users_type_report_id_foreign");
+        });
+
+        modelBuilder.Entity<SanctionsUser>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("sanctions_users_pkey");
+
+            entity.ToTable("sanctions_users");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("timestamp(0) without time zone")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.EndAt)
+                .HasColumnType("timestamp(0) without time zone")
+                .HasColumnName("end_at");
+            entity.Property(e => e.IsPermanent)
+                .HasDefaultValue(false)
+                .HasColumnName("is_permanent");
+            entity.Property(e => e.StartAt)
+                .HasColumnType("timestamp(0) without time zone")
+                .HasColumnName("start_at");
+            entity.Property(e => e.Status)
+                .HasMaxLength(255)
+                .HasDefaultValueSql("'active'::character varying")
+                .HasColumnName("status");
+            entity.Property(e => e.TypeReportUsersId).HasColumnName("type_report_users_id");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("timestamp(0) without time zone")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.TypeReportUsers).WithMany(p => p.SanctionsUsers)
+                .HasForeignKey(d => d.TypeReportUsersId)
+                .HasConstraintName("sanctions_users_type_report_users_id_foreign");
+
+            entity.HasOne(d => d.User).WithMany(p => p.SanctionsUsers)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("sanctions_users_user_id_foreign");
         });
 
         modelBuilder.Entity<Server>(entity =>
@@ -645,30 +549,6 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.UserId).HasColumnName("user_id");
         });
 
-        modelBuilder.Entity<TypeReportServer>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("type_report_servers_pkey");
-
-            entity.ToTable("type_report_servers");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Active)
-                .HasDefaultValue(true)
-                .HasColumnName("active");
-            entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("created_at");
-            entity.Property(e => e.Description)
-                .HasMaxLength(255)
-                .HasColumnName("description");
-            entity.Property(e => e.Name)
-                .HasMaxLength(255)
-                .HasColumnName("name");
-            entity.Property(e => e.UpdatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("updated_at");
-        });
-
         modelBuilder.Entity<TypeReportUser>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("type_report_users_pkey");
@@ -716,6 +596,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.EmailVerifiedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("email_verified_at");
+            entity.Property(e => e.IsAdmin).HasColumnName("isAdmin");
             entity.Property(e => e.LastTagChange)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("last_tag_change");

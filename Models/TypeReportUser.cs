@@ -18,4 +18,6 @@ public partial class TypeReportUser
     public DateTime? UpdatedAt { get; set; }
 
     public virtual ICollection<ReportUser> ReportUsers { get; set; } = new List<ReportUser>();
+
+    public virtual ICollection<SanctionsUser> SanctionsUsers { get; set; } = new List<SanctionsUser>();
 }

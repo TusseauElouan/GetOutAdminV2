@@ -37,19 +37,15 @@ public partial class User
 
     public virtual ICollection<ChannelMember> ChannelMembers { get; set; } = new List<ChannelMember>();
 
-    public virtual ICollection<Conversation> ConversationUser1s { get; set; } = new List<Conversation>();
-
-    public virtual ICollection<Conversation> ConversationUser2s { get; set; } = new List<Conversation>();
-
     public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
-
-    public virtual ICollection<PrivateMessage> PrivateMessages { get; set; } = new List<PrivateMessage>();
 
     public virtual ICollection<ReportUser> ReportUserReportedUsers { get; set; } = new List<ReportUser>();
 
     public virtual ICollection<ReportUser> ReportUserReporters { get; set; } = new List<ReportUser>();
 
     public virtual ICollection<ReportUser> ReportUserResolvedByNavigations { get; set; } = new List<ReportUser>();
+
+    public virtual ICollection<SanctionsUser> SanctionsUsers { get; set; } = new List<SanctionsUser>();
 
     public virtual ICollection<ServerInvite> ServerInviteInvitees { get; set; } = new List<ServerInvite>();
 
