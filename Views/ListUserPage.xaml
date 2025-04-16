@@ -8,6 +8,7 @@
       xmlns:fa="http://schemas.fontawesome.io/icons/"
       xmlns:converters="clr-namespace:GetOutAdminV2.Converters"
       xmlns:enum="clr-namespace:GetOutAdminV2.Enum"
+      xmlns:controls="clr-namespace:GetOutAdminV2.Controls"
       mc:Ignorable="d"
       Title="ListUserPage"
       Background="#1A1A1A">
@@ -150,11 +151,22 @@
 
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <DataGrid ItemsSource="{Binding Users}"
+
+        <!-- En-tête de la page -->
+        <TextBlock Grid.Row="0" Text="Gestion des Utilisateurs" FontSize="24" FontWeight="Bold" 
+                   Foreground="White" HorizontalAlignment="Center" Margin="0,20,0,20"/>
+
+        <!-- Zone de notification qui remplace les MessageBox -->
+        <controls:NotificationHost Grid.Row="1" x:Name="NotificationArea" />
+
+        <!-- DataGrid principal -->
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Users}"
                   SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
                   AutoGenerateColumns="False"
                   CellStyle="{StaticResource CenteredCellStyle}"
@@ -169,17 +181,35 @@
                 <DataGridTextColumn Header="Tag" Binding="{Binding Tag}" Width="250"/>
             </DataGrid.Columns>
         </DataGrid>
-        <fa:ImageAwesome Icon="Spinner" Visibility="{Binding LoadingVisibility}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White" />
-        <Border Grid.Row="1" Background="#333" BorderBrush="#6B46C1" BorderThickness="1" Padding="10" 
-       Margin="10,0,10,10" CornerRadius="5" HorizontalAlignment="Center"
-       Visibility="{Binding HasActiveSanction, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+        <!-- Indicateur de chargement amélioré -->
+        <Grid Grid.Row="1" Visibility="{Binding LoadingVisibility}" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="#222" CornerRadius="100" Width="80" Height="80" Margin="0,0,0,15">
+                <fa:ImageAwesome Icon="Spinner" Spin="True" SpinDuration="1" Foreground="#6B46C1" Width="40" Height="40"/>
+            </Border>
+
+            <TextBlock Grid.Row="1" Text="Chargement des utilisateurs..." Foreground="White" 
+                       FontSize="16" HorizontalAlignment="Center"/>
+        </Grid>
+
+        <!-- Message de sanction active -->
+        <Border Grid.Row="2" Background="#333" BorderBrush="#6B46C1" BorderThickness="1" Padding="10" 
+                Margin="10,0,10,10" CornerRadius="5" HorizontalAlignment="Center"
+                Visibility="{Binding HasActiveSanction, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel Orientation="Horizontal">
                 <fa:ImageAwesome Icon="ExclamationTriangle" Foreground="#FF6B6B" Width="16" Height="16" Margin="0,0,10,0"/>
                 <TextBlock Text="Sanction active : " Foreground="White" FontWeight="Bold"/>
                 <TextBlock Text="{Binding ActiveSanctionInfo}" Foreground="White"/>
             </StackPanel>
         </Border>
-        <StackPanel Grid.Row="2" Orientation="Vertical" HorizontalAlignment="Center" Margin="10">
+
+        <!-- Boutons d'action -->
+        <StackPanel Grid.Row="3" Orientation="Vertical" HorizontalAlignment="Center" Margin="10">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
                 <Button Command="{Binding ShowEditPopupCommand}" Style="{StaticResource ActionButtonStyle}">
                     <StackPanel Orientation="Horizontal">
@@ -202,17 +232,23 @@
                 </Button>
             </StackPanel>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
+            <!-- Contrôles de pagination -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="5,15,5,5">
                 <Button Command="{Binding LoadPreviousPageCommand}" IsEnabled="{Binding CanLoadPreviousPage}" Style="{StaticResource ActionButtonStyle}">
                     <fa:ImageAwesome Icon="ArrowLeft" Foreground="White" Width="16" Height="16" />
                 </Button>
 
-                <TextBox Width="50" Margin="5" Text="{Binding SelectedPageIndex, UpdateSourceTrigger=PropertyChanged}" 
-                         VerticalAlignment="Center" HorizontalContentAlignment="Center" Background="#2A2A2A" Foreground="White"/>
-                <Label Content=" / " Foreground="White" VerticalAlignment="Center" Margin="5" />
-                <Label Content="{Binding TotalPages}" Foreground="White" VerticalAlignment="Center" Margin="5" />
+                <Border Background="#2A2A2A" CornerRadius="4" Padding="5" Margin="5,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBox Width="50" Margin="0" Text="{Binding SelectedPageIndex, UpdateSourceTrigger=PropertyChanged}" 
+                                VerticalAlignment="Center" HorizontalContentAlignment="Center" Background="#2A2A2A" Foreground="White"
+                                BorderThickness="0"/>
+                        <TextBlock Text=" / " Foreground="White" VerticalAlignment="Center" Margin="5,0" />
+                        <TextBlock Text="{Binding TotalPages}" Foreground="White" VerticalAlignment="Center" Margin="0" />
+                    </StackPanel>
+                </Border>
 
-                <Button Command="{Binding GoToPageCommand}" Style="{StaticResource ActionButtonStyle}" Margin="5" VerticalAlignment="Center">
+                <Button Command="{Binding GoToPageCommand}" Style="{StaticResource ActionButtonStyle}" Margin="5,0" VerticalAlignment="Center">
                     <TextBlock Text="Aller" />
                 </Button>
 

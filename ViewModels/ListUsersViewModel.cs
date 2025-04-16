@@ -136,7 +136,8 @@ namespace GetOutAdminV2.ViewModels
                 LoadingVisibility = nameof(EVisibility.Visible);
                 DataGridVisibility = nameof(EVisibility.Hidden);
 
-                // Demander confirmation
+                // Vérifier si l'utilisateur veut vraiment promouvoir cet utilisateur
+                // On conserve cette vérification en MessageBox car c'est une confirmation qui nécessite une réponse
                 var result = MessageBox.Show(
                     $"Êtes-vous sûr de vouloir promouvoir {SelectedUser.Prenom} {SelectedUser.Nom} au statut d'administrateur ?",
                     "Confirmation",
@@ -148,11 +149,10 @@ namespace GetOutAdminV2.ViewModels
                     SelectedUser.IsAdmin = true;
                     _userManager.UpdateUser(SelectedUser);
 
-                    MessageBox.Show(
+                    // Remplacer le MessageBox par une notification
+                    NotificationService.Notify(
                         $"{SelectedUser.Prenom} {SelectedUser.Nom} a été promu administrateur avec succès.",
-                        "Promotion réussie",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                        NotificationType.Success);
 
                     // Recharger la liste des utilisateurs sans les admins
                     LoadUsersExcludingAdmins();
@@ -160,7 +160,7 @@ namespace GetOutAdminV2.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de la promotion de l'utilisateur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.Notify($"Erreur lors de la promotion de l'utilisateur : {ex.Message}", NotificationType.Error);
             }
             finally
             {
@@ -228,7 +228,9 @@ namespace GetOutAdminV2.ViewModels
             if (activeSanction != null)
             {
                 string endDate = activeSanction.IsPermanent ? "permanente" : $"jusqu'au {activeSanction.EndAt?.ToString("dd/MM/yyyy")}";
-                MessageBox.Show($"Cet utilisateur a déjà une sanction active {endDate}.", "Sanction existante", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // Remplacer MessageBox par notification
+                NotificationService.Notify($"Cet utilisateur a déjà une sanction active {endDate}.", NotificationType.Warning);
                 return;
             }
 
@@ -268,7 +270,7 @@ namespace GetOutAdminV2.ViewModels
 
                     if (typeReport == null)
                     {
-                        MessageBox.Show("Aucun type de rapport trouvé dans la base de données.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                        NotificationService.Notify("Aucun type de rapport trouvé dans la base de données.", NotificationType.Error);
                         return;
                     }
                 }
@@ -293,13 +295,13 @@ namespace GetOutAdminV2.ViewModels
 
                 _sanctionManager.AddSanction(sanction);
 
-                MessageBox.Show($"L'utilisateur {SelectedUser.Prenom} {SelectedUser.Nom} a été sanctionné avec succès.", "Sanction appliquée", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.Notify($"L'utilisateur {SelectedUser.Prenom} {SelectedUser.Nom} a été sanctionné avec succès.", NotificationType.Success);
 
                 IsSanctionPopupOpen = false;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'application de la sanction : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.Notify($"Erreur lors de l'application de la sanction : {ex.Message}", NotificationType.Error);
             }
             finally
             {
@@ -307,6 +309,7 @@ namespace GetOutAdminV2.ViewModels
                 DataGridVisibility = nameof(EVisibility.Visible);
             }
         }
+
 
         private void CancelSanction()
         {
@@ -356,11 +359,15 @@ namespace GetOutAdminV2.ViewModels
                 DataGridVisibility = nameof(EVisibility.Visible);
                 HasError = false;  // Pas d'erreur
                 IsEditPopupOpen = false;
+
+                // Ajouter cette ligne pour afficher une notification de succès
+                NotificationService.Notify($"Utilisateur {SelectedUser.Prenom} {SelectedUser.Nom} mis à jour avec succès.", NotificationType.Success);
             }
             catch (Exception ex)
             {
                 ErrorMessage = $"Erreur lors de la sauvegarde: {ex.Message}";
                 HasError = true;
+                NotificationService.Notify($"Erreur lors de la mise à jour: {ex.Message}", NotificationType.Error);
             }
         }
 
@@ -396,7 +403,7 @@ namespace GetOutAdminV2.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des utilisateurs : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.Notify($"Erreur lors du chargement des utilisateurs : {ex.Message}", NotificationType.Error);
             }
             finally
             {
@@ -430,7 +437,8 @@ namespace GetOutAdminV2.ViewModels
 
             if (backendPageIndex < 0 || backendPageIndex > maxPageIndex)
             {
-                MessageBox.Show($"Index de page invalide. Veuillez saisir un index entre 1 et {maxPageIndex + 1}.");
+                // Remplacer MessageBox par notification
+                NotificationService.Notify($"Index de page invalide. Veuillez saisir un index entre 1 et {maxPageIndex + 1}.", NotificationType.Warning);
                 SelectedPageIndex = _currentPage + 1;
                 return;
             }

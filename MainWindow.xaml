@@ -8,6 +8,7 @@
         xmlns:behaviors="clr-namespace:GetOutAdminV2._0"
         xmlns:converters="clr-namespace:GetOutAdminV2.Converters" 
         xmlns:vm="clr-namespace:GetOutAdminV2.ViewModels"
+        xmlns:controls="clr-namespace:GetOutAdminV2.Controls"
         Title="GetOut" Height="900" Width="1600"
         Icon="/Resources/Images/logo.png"
         Background="#1E1E1E" 
@@ -61,7 +62,6 @@
     <Grid>
         <!-- Fond général avec un effet de bord arrondi -->
         <Border Background="#1E1E1E" CornerRadius="20" Padding="10"/>
-
         <!-- Barre de navigation avec visibilité contrôlée -->
         <Grid VerticalAlignment="Top" Width="250"
               Visibility="{Binding IsNotLogInPage, Converter={StaticResource BooleanToVisibilityConverter}}"
