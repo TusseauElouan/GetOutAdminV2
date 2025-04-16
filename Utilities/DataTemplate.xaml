@@ -9,4 +9,12 @@
     <DataTemplate DataType="{x:Type vm:ListUsersViewModel}">
         <view:ListUserPage/>
     </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:ReportViewModel}">
+        <view:ReportPage/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:SanctionsViewModel}">
+        <view:SanctionsPage/>
+    </DataTemplate>
 </ResourceDictionary>
