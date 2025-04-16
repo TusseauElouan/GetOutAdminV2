@@ -34,7 +34,14 @@ namespace GetOutAdminV2.Providers
             try
             {
                 using var context = _contextFactory.CreateDbContext();
-                var reports = context.ReportUsers.ToList();
+                // Désactiver le chargement automatique pour éviter la récursion
+                context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+
+                // Utiliser .AsNoTracking() pour éviter de suivre les entités
+                var reports = context.ReportUsers
+                                    .AsNoTracking()
+                                    .ToList();
+
                 return new ObservableCollection<ReportUser>(reports);
             }
             catch (Exception ex)
@@ -62,7 +69,7 @@ namespace GetOutAdminV2.Providers
             try
             {
                 using var context = _contextFactory.CreateDbContext();
-                return context.ReportUsers.FirstOrDefault(r => r.ReportedUserId == id);
+                return context.ReportUsers.FirstOrDefault(r => r.Id == id);
             }
             catch (Exception ex)
             {
@@ -89,7 +96,20 @@ namespace GetOutAdminV2.Providers
             try
             {
                 using var context = _contextFactory.CreateDbContext();
-                context.Attach(report).State = EntityState.Modified;
+
+                // Assurez-vous que le suivi est activé uniquement pour l'entité principale
+                context.Entry(report).State = EntityState.Modified;
+
+                // Détacher explicitement les entités liées pour éviter leur mise à jour
+                if (report.TypeReport != null)
+                    context.Entry(report.TypeReport).State = EntityState.Detached;
+                if (report.Reporter != null)
+                    context.Entry(report.Reporter).State = EntityState.Detached;
+                if (report.ReportedUser != null)
+                    context.Entry(report.ReportedUser).State = EntityState.Detached;
+                if (report.ResolvedByNavigation != null)
+                    context.Entry(report.ResolvedByNavigation).State = EntityState.Detached;
+
                 context.SaveChanges();
             }
             catch (Exception ex)

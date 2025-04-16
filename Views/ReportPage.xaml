@@ -115,7 +115,7 @@
 
         <Style x:Key="CustomComboBoxStyle" TargetType="ComboBox">
             <Setter Property="Background" Value="#2E2E2E"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="#2E2E2E"/>
             <Setter Property="BorderBrush" Value="#6B46C1"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="5"/>
@@ -154,16 +154,15 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- En-tête avec filtres -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10" HorizontalAlignment="Center">
             <TextBlock Text="Filtrer par statut:" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0"/>
             <ComboBox ItemsSource="{Binding Source={StaticResource ReportStatusValues}}"
-          SelectedItem="{Binding SelectedStatus}" 
-          Width="200"
-          Style="{StaticResource CustomComboBoxStyle}">
+                      SelectedItem="{Binding SelectedStatus}" 
+                      Width="200"
+                      Style="{StaticResource CustomComboBoxStyle}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding}" Foreground="White" />
@@ -172,13 +171,22 @@
             </ComboBox>
         </StackPanel>
 
-        <!-- Bouton pour sanctionner -->
+        <!-- Boutons pour actions sur les reports -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10,0,10,10">
             <Button Command="{Binding ShowSanctionPopupCommand}" 
                     Style="{StaticResource ActionButtonStyle}">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome Icon="Ban" Foreground="White" Width="16" Height="16" />
                     <TextBlock Text=" Sanctionner l'utilisateur signalé" Margin="5,0,0,0" />
+                </StackPanel>
+            </Button>
+
+            <Button Command="{Binding ShowChangeStatusPopupCommand}" 
+                    Style="{StaticResource ActionButtonStyle}"
+                    Margin="10,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Exchange" Foreground="White" Width="16" Height="16" />
+                    <TextBlock Text=" Changer le statut" Margin="5,0,0,0" />
                 </StackPanel>
             </Button>
         </StackPanel>
@@ -213,7 +221,7 @@
                          Foreground="White" />
 
         <!-- Contrôles de pagination -->
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
             <Button Command="{Binding LoadPreviousPageCommand}" 
                     Style="{StaticResource PaginationButtonStyle}"
                     IsEnabled="{Binding CanLoadPreviousPage}">
@@ -285,6 +293,63 @@
                     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="20">
                         <Button Content="Annuler" Width="120" Height="40" Command="{Binding CancelSanctionCommand}" Background="Gray" Foreground="White" Margin="5" BorderThickness="0"/>
                         <Button Content="Appliquer" Command="{Binding ConfirmSanctionCommand}" Background="#E53E3E" Foreground="White" BorderBrush="#E53E3E" BorderThickness="1" Margin="5" Width="120" Height="40"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Popup>
+
+        <!-- Popup de changement de statut -->
+        <Popup IsOpen="{Binding IsChangeStatusPopupOpen}" Placement="Center" StaysOpen="False">
+            <Border Background="#2A2A2A" Width="450" Height="Auto" MinHeight="400" CornerRadius="10" Padding="20" BorderBrush="#6B46C1" BorderThickness="2">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Changement de statut" 
+                               HorizontalAlignment="Center" VerticalAlignment="Top"
+                               Margin="10" FontSize="22" FontWeight="Bold" Foreground="White"/>
+
+                    <Border Grid.Row="1" Background="#FFE0E0" CornerRadius="4" Padding="10" Margin="20,0,20,15" BorderThickness="1" BorderBrush="#FFB0B0" Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="#D32F2F" TextWrapping="Wrap" FontSize="14"/>
+                    </Border>
+
+                    <Border Grid.Row="1" Background="#222222" CornerRadius="15" Margin="20,50,20,20" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="Report concernant :" FontSize="16" Foreground="White" Margin="0,0,0,10"/>
+                            <Border Background="#333333" CornerRadius="8" Padding="10" Margin="0,0,0,20">
+                                <TextBlock FontSize="16" Foreground="White" Text="{Binding SelectedReport.ReportedUser.Nom}"/>
+                            </Border>
+
+                            <TextBlock Text="Nouveau statut :" FontSize="16" Foreground="White" Margin="0,0,0,10"/>
+                            <ComboBox ItemsSource="{Binding Source={StaticResource ReportStatusValues}}"
+                                      SelectedItem="{Binding NewReportStatus}"
+                                      Style="{StaticResource CustomComboBoxStyle}"
+                                      Margin="0,0,0,20">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" Foreground="White"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
+                            <TextBlock Text="Note de résolution :" FontSize="16" Foreground="White" Margin="0,0,0,10"/>
+                            <TextBox Text="{Binding StatusChangedNote, UpdateSourceTrigger=PropertyChanged}"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     Height="100"
+                                     Background="#333333"
+                                     Foreground="White"
+                                     BorderThickness="0"
+                                     Padding="10"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="20">
+                        <Button Content="Annuler" Width="120" Height="40" Command="{Binding CancelChangeStatusCommand}" Background="Gray" Foreground="White" Margin="5" BorderThickness="0"/>
+                        <Button Content="Appliquer" Command="{Binding ConfirmChangeStatusCommand}" Background="#6B46C1" Foreground="White" BorderBrush="#6B46C1" BorderThickness="1" Margin="5" Width="120" Height="40"/>
                     </StackPanel>
                 </Grid>
             </Border>

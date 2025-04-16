@@ -35,10 +35,11 @@ namespace GetOutAdminV2.ViewModels
         [ObservableProperty]
         private string? _errorMessage = string.Empty;
 
+        // Modifiez la méthode LogIn pour utiliser async/await
         private ICommand? _logInCommand;
-        public ICommand LogInCommand => _logInCommand ??= new RelayCommand(LogIn); // Notez le AsyncRelayCommand
+        public ICommand LogInCommand => _logInCommand ??= new AsyncRelayCommand(LogInAsync);
 
-        private void LogIn()
+        private async Task LogInAsync()
         {
             if (string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(Password))
             {
@@ -52,15 +53,9 @@ namespace GetOutAdminV2.ViewModels
                 ErrorMessage = string.Empty;
                 HasError = false;
                 IsLoading = true;
-                
-                var user = _userManager.GetUserByEmail(Email);
 
-                if (!VerifyPassword(Password, user.Password))
-                {
-                    ErrorMessage = "Email ou mot de passe incorrect";
-                    HasError = true;
-                    return;
-                }
+                // Exécutez l'opération de base de données sur un thread en arrière-plan
+                var user = await Task.Run(() => _userManager.GetUserByEmail(Email));
 
                 if (user == null)
                 {
@@ -68,6 +63,24 @@ namespace GetOutAdminV2.ViewModels
                     HasError = true;
                     return;
                 }
+
+                // Vérifiez le mot de passe de manière asynchrone
+                bool passwordValid = await Task.Run(() => VerifyPassword(Password, user.Password));
+                if (!passwordValid)
+                {
+                    ErrorMessage = "Email ou mot de passe incorrect";
+                    HasError = true;
+                    return;
+                }
+
+                // Vérification si l'utilisateur est admin
+                if (!user.IsAdmin)
+                {
+                    ErrorMessage = "Vous n'avez pas les droits d'administration";
+                    HasError = true;
+                    return;
+                }
+
                 _userManager.CurrentUser = user;
                 _navigationViewModel.DashBoardCommand.Execute(null);
             }
@@ -81,7 +94,6 @@ namespace GetOutAdminV2.ViewModels
                 IsLoading = false;
             }
         }
-
         private bool VerifyPassword(string password, string storedHash)
         {
             return BCrypt.Net.BCrypt.Verify(password, storedHash);
