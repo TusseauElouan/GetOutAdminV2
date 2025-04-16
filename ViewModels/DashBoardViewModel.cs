@@ -39,17 +39,20 @@ namespace GetOutAdminV2.ViewModels
 
         private void LoadData()
         {
-            // Nombre total d'utilisateurs
-            TotalUsers = _userManager.ListOfUsers.Count;
+            // Nombre total d'utilisateurs (exclus les admins)
+            TotalUsers = _userManager.ListOfUsers.Count(u => !u.IsAdmin);
 
-            // Liste des 5 derniers utilisateurs ajoutés
+            // Liste des 5 derniers utilisateurs ajoutés (exclus les admins)
             RecentUsers = new ObservableCollection<User>(
-                _userManager.ListOfUsers.OrderByDescending(u => u.CreatedAt).Take(5)
+                _userManager.ListOfUsers
+                    .Where(u => !u.IsAdmin)
+                    .OrderByDescending(u => u.CreatedAt)
+                    .Take(5)
             );
 
-            // Graphique d'évolution des utilisateurs
+            // Graphique d'évolution des utilisateurs (exclus les admins)
             var userGrowth = _userManager.ListOfUsers
-                .Where(u => u.CreatedAt.HasValue)
+                .Where(u => u.CreatedAt.HasValue && !u.IsAdmin)
                 .GroupBy(u => new { u.CreatedAt.Value.Year, u.CreatedAt.Value.Month })
                 .OrderBy(g => g.Key.Year)
                 .ThenBy(g => g.Key.Month)
@@ -68,13 +71,13 @@ namespace GetOutAdminV2.ViewModels
             }
 
             UserGrowthChart = new SeriesCollection
-            {
-                new ColumnSeries
-                {
-                    Title = "Utilisateurs",
-                    Values = new ChartValues<int>(cumulativeUserGrowth.Values)
-                }
-            };
+    {
+        new ColumnSeries
+        {
+            Title = "Utilisateurs",
+            Values = new ChartValues<int>(cumulativeUserGrowth.Values)
+        }
+    };
 
             // Formater les labels pour afficher Mois Année
             Labels = cumulativeUserGrowth.Keys

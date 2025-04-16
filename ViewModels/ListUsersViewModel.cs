@@ -75,6 +75,12 @@ namespace GetOutAdminV2.ViewModels
         [ObservableProperty]
         private string _sanctionDescription = string.Empty;
 
+        [ObservableProperty]
+        private string _activeSanctionInfo = string.Empty;
+
+        [ObservableProperty]
+        private bool _hasActiveSanction = false;
+
         public IEnumerable<ESanctionDuration> SanctionDurations => System.Enum.GetValues(typeof(ESanctionDuration)).Cast<ESanctionDuration>();
 
         public IRelayCommand LoadNextPageCommand { get; }
@@ -86,6 +92,7 @@ namespace GetOutAdminV2.ViewModels
         public IRelayCommand CancelSanctionCommand { get; }
         public IRelayCommand CancelEditCommand { get; }
         public IRelayCommand ConfirmEditUserCommand { get; }
+        public IRelayCommand PromoteToAdminCommand { get; }
 
         // Propriété pour vérifier si un utilisateur est sélectionné
         public bool CanSanctionUser => SelectedUser != null;
@@ -111,19 +118,106 @@ namespace GetOutAdminV2.ViewModels
             ConfirmEditUserCommand = new RelayCommand(ConfirmEditUser);
             CancelEditCommand = new RelayCommand(CancelEdit);
 
+            PromoteToAdminCommand = new RelayCommand(PromoteToAdmin, () => SelectedUser != null && !SelectedUser.IsAdmin);
+
             _totalUsers = _userManager.ListOfUsers.Count;
             TotalPages = (int)Math.Ceiling((double)_totalUsers / PageSize);
+
+            LoadUsersExcludingAdmins();
+
             LoadNextPage();
         }
+        private void PromoteToAdmin()
+        {
+            if (SelectedUser == null) return;
 
+            try
+            {
+                LoadingVisibility = nameof(EVisibility.Visible);
+                DataGridVisibility = nameof(EVisibility.Hidden);
+
+                // Demander confirmation
+                var result = MessageBox.Show(
+                    $"Êtes-vous sûr de vouloir promouvoir {SelectedUser.Prenom} {SelectedUser.Nom} au statut d'administrateur ?",
+                    "Confirmation",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    SelectedUser.IsAdmin = true;
+                    _userManager.UpdateUser(SelectedUser);
+
+                    MessageBox.Show(
+                        $"{SelectedUser.Prenom} {SelectedUser.Nom} a été promu administrateur avec succès.",
+                        "Promotion réussie",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+
+                    // Recharger la liste des utilisateurs sans les admins
+                    LoadUsersExcludingAdmins();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de la promotion de l'utilisateur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                LoadingVisibility = nameof(EVisibility.Hidden);
+                DataGridVisibility = nameof(EVisibility.Visible);
+            }
+        }
         // Méthode exécutée lorsque SelectedUser change
         partial void OnSelectedUserChanged(User? oldValue, User? newValue)
         {
-            // Notifier les commandes de vérifier à nouveau leurs conditions d'activation
+            // Notifier les commandes
             (ShowSanctionPopupCommand as RelayCommand)?.NotifyCanExecuteChanged();
             (ShowEditPopupCommand as RelayCommand)?.NotifyCanExecuteChanged();
-        }
+            (PromoteToAdminCommand as RelayCommand)?.NotifyCanExecuteChanged();
 
+            // Vérifier si l'utilisateur a une sanction active
+            if (newValue != null)
+            {
+                CheckActiveSanction(newValue.Id);
+            }
+            else
+            {
+                HasActiveSanction = false;
+                ActiveSanctionInfo = string.Empty;
+            }
+        }
+        private void CheckActiveSanction(long userId)
+        {
+            var activeSanction = _sanctionManager.GetActiveSanctionByUserId(userId);
+            if (activeSanction != null)
+            {
+                HasActiveSanction = true;
+
+                // Récupérer le type de sanction
+                string typeName = "Inconnu";
+                if (activeSanction.TypeReportUsers == null && activeSanction.TypeReportUsersId > 0)
+                {
+                    var typeReport = _typeReportManager.GetTypeReportById(activeSanction.TypeReportUsersId);
+                    if (typeReport != null)
+                    {
+                        typeName = typeReport.Name;
+                    }
+                }
+                else if (activeSanction.TypeReportUsers != null)
+                {
+                    typeName = activeSanction.TypeReportUsers.Name;
+                }
+
+                string endDate = activeSanction.IsPermanent ? "permanente" : $"jusqu'au {activeSanction.EndAt?.ToString("dd/MM/yyyy")}";
+                ActiveSanctionInfo = $"Type: {typeName} - {endDate}";
+            }
+            else
+            {
+                HasActiveSanction = false;
+                ActiveSanctionInfo = string.Empty;
+            }
+        }
         private void ShowSanctionPopup()
         {
             if (IsSanctionPopupOpen || SelectedUser == null) return;
@@ -270,7 +364,46 @@ namespace GetOutAdminV2.ViewModels
             }
         }
 
-        private IEnumerable<User> GetUsers(int startIndex, int count) => _userManager.ListOfUsers.Skip(startIndex).Take(count);
+        private IEnumerable<User> GetUsers(int startIndex, int count)
+        {
+            return _userManager.ListOfUsers
+                .Where(u => !u.IsAdmin)
+                .Skip(startIndex)
+                .Take(count);
+        }
+
+        private void LoadUsersExcludingAdmins()
+        {
+            try
+            {
+                LoadingVisibility = nameof(EVisibility.Visible);
+                DataGridVisibility = nameof(EVisibility.Hidden);
+
+                _userManager.GetAllUsers();
+
+                // Compter uniquement les utilisateurs non-admins
+                _totalUsers = _userManager.ListOfUsers.Count(u => !u.IsAdmin);
+                TotalPages = (int)Math.Ceiling((double)_totalUsers / PageSize);
+
+                // Réinitialiser la page actuelle
+                _currentPage = 0;
+                LoadUsersForPage(_currentPage);
+                SelectedPageIndex = _currentPage + 1;
+
+                // Mettre à jour les boutons de navigation
+                CanLoadPreviousPage = _currentPage > 0;
+                CanLoadNextPage = _totalUsers > (_currentPage + 1) * PageSize;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des utilisateurs : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                LoadingVisibility = nameof(EVisibility.Hidden);
+                DataGridVisibility = nameof(EVisibility.Visible);
+            }
+        }
 
         private void LoadNextPage()
         {
