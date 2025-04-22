@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="100" d:DesignWidth="300">
     <Grid>
-        <ItemsControl x:Name="NotificationsPanel" HorizontalAlignment="Center" VerticalAlignment="Top">
+        <ItemsControl x:Name="NotificationsPanel" HorizontalAlignment="Center" VerticalAlignment="Top" Panel.ZIndex="999">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <StackPanel Orientation="Vertical" />

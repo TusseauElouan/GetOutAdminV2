@@ -142,27 +142,16 @@ namespace GetOutAdminV2.ViewModels
                 LoadingVisibility = nameof(EVisibility.Visible);
                 DataGridVisibility = nameof(EVisibility.Hidden);
 
-                // Vérifier si l'utilisateur veut vraiment promouvoir cet utilisateur
-                // On conserve cette vérification en MessageBox car c'est une confirmation qui nécessite une réponse
-                var result = MessageBox.Show(
-                    $"Êtes-vous sûr de vouloir promouvoir {SelectedUser.Prenom} {SelectedUser.Nom} au statut d'administrateur ?",
-                    "Confirmation",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
 
-                if (result == MessageBoxResult.Yes)
-                {
-                    SelectedUser.IsAdmin = true;
-                    _userManager.UpdateUser(SelectedUser);
+                SelectedUser.IsAdmin = true;
+                _userManager.UpdateUser(SelectedUser);
 
-                    // Remplacer le MessageBox par une notification
-                    NotificationService.Notify(
-                        $"{SelectedUser.Prenom} {SelectedUser.Nom} a été promu administrateur avec succès.",
-                        NotificationType.Success);
+                NotificationService.Notify(
+                    $"{SelectedUser.Prenom} {SelectedUser.Nom} a été promu administrateur avec succès.",
+                    NotificationType.Success);
 
-                    // Recharger la liste des utilisateurs sans les admins
-                    LoadUsersExcludingAdmins();
-                }
+                LoadUsersExcludingAdmins();
+                
             }
             catch (Exception ex)
             {

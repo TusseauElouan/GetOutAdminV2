@@ -84,7 +84,7 @@ namespace GetOutAdminV2.ViewModels
         private string _statusChangedNote = string.Empty;
 
         public IEnumerable<ESanctionDuration> SanctionDurations => System.Enum.GetValues(typeof(ESanctionDuration)).Cast<ESanctionDuration>();
-        public IEnumerable<EReportStatus> ReportStatuses => System.Enum.GetValues(typeof(EReportStatus)).Cast<EReportStatus>();
+        public IEnumerable<EReportStatus> AvailableStatuses => System.Enum.GetValues(typeof(EReportStatus)).Cast<EReportStatus>();
 
         public IRelayCommand LoadNextPageCommand { get; }
         public IRelayCommand LoadPreviousPageCommand { get; }
@@ -109,7 +109,7 @@ namespace GetOutAdminV2.ViewModels
             SelectedStatus = EReportStatus.pending;
             _reportManager.GetAllReports();
             _typeReportManager.GetAllTypeReports();
-            Reports = new(_reportManager.ListOfReports);
+            Reports = new ObservableCollection<ReportUser>();
 
             LoadReports(); // Charge initialement les rapports avec les statuts filtrés
             LoadNextPageCommand = new RelayCommand(LoadNextPage);
@@ -126,9 +126,21 @@ namespace GetOutAdminV2.ViewModels
             ConfirmChangeStatusCommand = new RelayCommand(ConfirmChangeStatus);
             CancelChangeStatusCommand = new RelayCommand(CancelChangeStatus);
 
-            _totalReports = _reportManager.ListOfReports.Count;
+            _totalReports = CountReportsWithStatus(SelectedStatus);
             TotalPages = (int)Math.Ceiling((double)_totalReports / PageSize);
+
+            // Initialiser avec la première page
+            _currentPage = 0;
             LoadReportsForPage(_currentPage);
+            SelectedPageIndex = _currentPage + 1;
+            CanLoadPreviousPage = _currentPage > 0;
+            CanLoadNextPage = _totalReports > (_currentPage + 1) * PageSize;
+        }
+
+        // Méthode pour compter les rapports avec un statut spécifique
+        private int CountReportsWithStatus(EReportStatus status)
+        {
+            return _reportManager.ListOfReports.Count(r => r.Status == status.ToString());
         }
 
         // Méthode exécutée lorsque SelectedReport change
@@ -152,8 +164,8 @@ namespace GetOutAdminV2.ViewModels
             // Vérifier si le report est déjà rejeté, auquel cas on ne peut pas sanctionner
             if (SelectedReport.Status == EReportStatus.rejected.ToString())
             {
-                MessageBox.Show("Ce report a été rejeté. Impossible d'appliquer une sanction.",
-                    "Action impossible", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.Notify("Ce report a été rejeté. Impossible d'appliquer une sanction.",
+                    NotificationType.Warning, 5);
                 return;
             }
 
@@ -166,7 +178,7 @@ namespace GetOutAdminV2.ViewModels
             if (activeSanction != null)
             {
                 string endDate = activeSanction.IsPermanent ? "permanente" : $"jusqu'au {activeSanction.EndAt?.ToString("dd/MM/yyyy")}";
-                MessageBox.Show($"Cet utilisateur a déjà une sanction active {endDate}.", "Sanction existante", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.Notify($"Cet utilisateur a déjà une sanction active {endDate}.", NotificationType.Warning,10);
                 return;
             }
 
@@ -235,7 +247,7 @@ namespace GetOutAdminV2.ViewModels
                 SelectedReport.ResolutionNote = $"Utilisateur sanctionné - {SelectedSanctionDuration.GetDisplayName()}";
                 _reportManager.UpdateReport(SelectedReport);
 
-                MessageBox.Show($"L'utilisateur {SelectedReport.ReportedUser.Nom} a été sanctionné avec succès.", "Sanction appliquée", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.Notify($"L'utilisateur {SelectedReport.ReportedUser.Nom} a été sanctionné avec succès.", NotificationType.Success);
 
                 IsSanctionPopupOpen = false;
 
@@ -244,7 +256,7 @@ namespace GetOutAdminV2.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'application de la sanction : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.Notify($"Erreur lors de l'application de la sanction : {ex.Message}", NotificationType.Error);
             }
             finally
             {
@@ -277,7 +289,7 @@ namespace GetOutAdminV2.ViewModels
 
                 _reportManager.UpdateReport(SelectedReport);
 
-                MessageBox.Show($"Le statut du report a été mis à jour avec succès.", "Statut mis à jour", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.Notify($"Le statut du report a été mis à jour avec succès.", NotificationType.Success);
 
                 IsChangeStatusPopupOpen = false;
 
@@ -287,12 +299,15 @@ namespace GetOutAdminV2.ViewModels
                 // Rafraîchir la liste filtrée selon le statut sélectionné
                 LoadReports();
 
-                // Assurer que la liste affichée correspond au status actuel
-                SelectedStatus = NewReportStatus;
+                // Si le statut a changé et ne correspond plus au filtre actuel, l'élément ne sera plus visible
+                if (NewReportStatus != SelectedStatus)
+                {
+                    SelectedReport = null; // Désélectionner le rapport qui n'est plus visible
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de la mise à jour du statut : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.Notify($"Erreur lors de la mise à jour du statut : {ex.Message}", NotificationType.Error);
             }
             finally
             {
@@ -313,29 +328,79 @@ namespace GetOutAdminV2.ViewModels
 
         partial void OnSelectedStatusChanged(EReportStatus value)
         {
-            LoadReports(); // Recharger les rapports quand le statut change
+            // Recharger les rapports quand le statut change
+            LoadReports();
+
+            // Recalculer le nombre total de rapports et les pages
+            _totalReports = CountReportsWithStatus(value);
+            TotalPages = (int)Math.Ceiling((double)_totalReports / PageSize);
+
+            // Réinitialiser la pagination
+            _currentPage = 0;
+            SelectedPageIndex = 1;
+            CanLoadPreviousPage = false;
+            CanLoadNextPage = _totalReports > PageSize;
+
+            // Charger la première page
+            LoadReportsForPage(_currentPage);
         }
 
         private void LoadReports()
         {
-            // Filtrer les rapports selon le statut sélectionné
-            var filteredReports = _reportManager.ListOfReports
-                                     .Where(report => report.Status == SelectedStatus.ToString())
-                                     .ToList();
-
-            Reports.Clear();
-            foreach (var report in filteredReports)
+            try
             {
-                // Remplacer les IDs par les noms
-                report.ReportedUser = new User() { Nom = _userManager.GetUserById(report.ReportedUserId)?.Nom ?? "Utilisateur inconnu" };
-                report.Reporter = new User() { Nom = _userManager.GetUserById(report.ReporterId)?.Nom ?? "Utilisateur inconnu" };
-                report.TypeReport = new TypeReportUser() { Name = _typeReportManager.GetTypeReportById(report.TypeReportId).Name ?? "Type de signalement inconnu" };
+                LoadingVisibility = nameof(EVisibility.Visible);
+                DataGridVisibility = nameof(EVisibility.Hidden);
 
-                Reports.Add(report);
+                // Filtrer les rapports selon le statut sélectionné
+                var filteredReports = _reportManager.ListOfReports
+                                         .Where(report => report.Status == SelectedStatus.ToString())
+                                         .ToList();
+
+                Reports.Clear();
+                foreach (var report in filteredReports)
+                {
+                    // S'assurer que les références sont initialisées
+                    if (report.ReportedUser == null)
+                    {
+                        var reportedUser = _userManager.GetUserById(report.ReportedUserId);
+                        report.ReportedUser = reportedUser ?? new User { Nom = "Utilisateur inconnu" };
+                    }
+
+                    if (report.Reporter == null)
+                    {
+                        var reporter = _userManager.GetUserById(report.ReporterId);
+                        report.Reporter = reporter ?? new User { Nom = "Utilisateur inconnu" };
+                    }
+
+                    if (report.TypeReport == null)
+                    {
+                        var typeReport = _typeReportManager.GetTypeReportById(report.TypeReportId);
+                        report.TypeReport = typeReport ?? new TypeReportUser { Name = "Type inconnu" };
+                    }
+
+                    Reports.Add(report);
+                }
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify($"Erreur lors du chargement des reports : {ex.Message}", NotificationType.Error);
+            }
+            finally
+            {
+                LoadingVisibility = nameof(EVisibility.Hidden);
+                DataGridVisibility = nameof(EVisibility.Visible);
             }
         }
 
-        private IEnumerable<ReportUser> GetReports(int startIndex, int count) => _reportManager.ListOfReports.Skip(startIndex).Take(count);
+        private IEnumerable<ReportUser> GetReports(int startIndex, int count)
+        {
+            // Filtrer les reports par le statut sélectionné
+            return _reportManager.ListOfReports
+                  .Where(r => r.Status == SelectedStatus.ToString())
+                  .Skip(startIndex)
+                  .Take(count);
+        }
 
         private void LoadNextPage()
         {
@@ -362,7 +427,7 @@ namespace GetOutAdminV2.ViewModels
 
             if (backendPageIndex < 0 || backendPageIndex > maxPageIndex)
             {
-                MessageBox.Show($"Index de page invalide. Veuillez saisir un index entre 1 et {maxPageIndex + 1}.");
+                NotificationService.Notify($"Index de page invalide. Veuillez saisir un index entre 1 et {maxPageIndex + 1}.", NotificationType.Warning);
                 SelectedPageIndex = _currentPage + 1;
                 return;
             }
@@ -378,6 +443,25 @@ namespace GetOutAdminV2.ViewModels
             Reports.Clear();
             foreach (var report in reports)
             {
+                // Assurer que les références sont chargées
+                if (report.ReportedUser == null)
+                {
+                    var reportedUser = _userManager.GetUserById(report.ReportedUserId);
+                    report.ReportedUser = reportedUser ?? new User { Nom = "Utilisateur inconnu" };
+                }
+
+                if (report.Reporter == null)
+                {
+                    var reporter = _userManager.GetUserById(report.ReporterId);
+                    report.Reporter = reporter ?? new User { Nom = "Utilisateur inconnu" };
+                }
+
+                if (report.TypeReport == null)
+                {
+                    var typeReport = _typeReportManager.GetTypeReportById(report.TypeReportId);
+                    report.TypeReport = typeReport ?? new TypeReportUser { Name = "Type inconnu" };
+                }
+
                 Reports.Add(report);
             }
 

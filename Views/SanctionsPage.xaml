@@ -29,7 +29,7 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="HorizontalAlignment" Value="Center" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Width" Value="750" />
+            <Setter Property="Width" Value="900" />
             <Setter Property="AutoGenerateColumns" Value="False" />
             <Setter Property="IsReadOnly" Value="True" />
             <Setter Property="HeadersVisibility" Value="Column" />
@@ -81,6 +81,22 @@
             </Style.Triggers>
         </Style>
 
+        <Style x:Key="CancelButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#E53E3E" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#A22A2A" />
+                    <Setter Property="Opacity" Value="0.6" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="PaginationButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
             <Setter Property="Width" Value="40" />
             <Setter Property="Height" Value="30" />
@@ -106,16 +122,8 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-
-        <!-- En-tête -->
-        <StackPanel Grid.Row="0" Margin="10">
-            <TextBlock Text="Liste des sanctions actives" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-            <Border Background="#333333" CornerRadius="5" Padding="10" Margin="0,0,0,10" HorizontalAlignment="Center">
-                <TextBlock Text="Utilisateurs actuellement sanctionnés" Foreground="White" FontSize="16"/>
-            </Border>
-        </StackPanel>
-
         <!-- DataGrid principal -->
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding Sanctions}"
@@ -164,8 +172,19 @@
                          HorizontalAlignment="Center" 
                          Foreground="White" />
 
+        <!-- Bouton d'annulation de sanction -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,10">
+            <Button Command="{Binding CancelSanctionCommand}" 
+                    Style="{StaticResource CancelButtonStyle}">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Times" Foreground="White" Width="16" Height="16" />
+                    <TextBlock Text=" Annuler la sanction" Margin="5,0,0,0" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
         <!-- Contrôles de pagination -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
             <Button Command="{Binding LoadPreviousPageCommand}" 
                     Style="{StaticResource PaginationButtonStyle}"
                     IsEnabled="{Binding CanLoadPreviousPage}">
@@ -184,5 +203,49 @@
                 <fa:ImageAwesome Icon="ArrowRight" Foreground="White" Width="14" Height="14" />
             </Button>
         </StackPanel>
+
+        <!-- Popup de confirmation d'annulation de sanction -->
+        <Popup IsOpen="{Binding IsConfirmCancelPopupOpen}" Placement="Center" StaysOpen="False">
+            <Border Background="#2A2A2A" Width="450" Height="Auto" MinHeight="300" CornerRadius="10" Padding="20" BorderBrush="#E53E3E" BorderThickness="2">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Annulation de sanction" 
+                               HorizontalAlignment="Center" VerticalAlignment="Top"
+                               Margin="10" FontSize="22" FontWeight="Bold" Foreground="White"/>
+
+                    <Border Grid.Row="1" Background="#222222" CornerRadius="15" Margin="20,20,20,20" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="Vous êtes sur le point d'annuler une sanction active." Foreground="White" 
+                                      TextWrapping="Wrap" FontSize="14" Margin="0,0,0,15"/>
+
+                            <TextBlock Text="Cette action est irréversible. Veuillez fournir une raison pour cette annulation:" 
+                                      Foreground="White" TextWrapping="Wrap" FontSize="14" Margin="0,0,0,10"/>
+
+                            <TextBox Text="{Binding CancelReason, UpdateSourceTrigger=PropertyChanged}"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     Height="100"
+                                     Background="#333333"
+                                     Foreground="White"
+                                     BorderThickness="0"
+                                     Padding="10"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="20">
+                        <Button Content="Annuler" Width="120" Height="40" Command="{Binding CloseCancelPopupCommand}" 
+                               Background="Gray" Foreground="White" Margin="5" BorderThickness="0"/>
+                        <Button Content="Confirmer" Command="{Binding ConfirmCancelSanctionCommand}" 
+                               Background="#E53E3E" Foreground="White" BorderBrush="#E53E3E" BorderThickness="1" 
+                               Margin="5" Width="120" Height="40"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Popup>
     </Grid>
 </Page>

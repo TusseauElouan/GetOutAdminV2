@@ -45,9 +45,18 @@ namespace GetOutAdminV2.ViewModels
         [ObservableProperty]
         private string _dataGridVisibility = nameof(EVisibility.Visible);
 
+        [ObservableProperty]
+        private bool _isConfirmCancelPopupOpen = false;
+
+        [ObservableProperty]
+        private string _cancelReason = string.Empty;
+
         public IRelayCommand LoadNextPageCommand { get; }
         public IRelayCommand LoadPreviousPageCommand { get; }
         public IRelayCommand GoToPageCommand { get; }
+        public IRelayCommand CancelSanctionCommand { get; }
+        public IRelayCommand ConfirmCancelSanctionCommand { get; }
+        public IRelayCommand CloseCancelPopupCommand { get; }
 
         public SanctionsViewModel()
         {
@@ -61,7 +70,93 @@ namespace GetOutAdminV2.ViewModels
             LoadPreviousPageCommand = new RelayCommand(LoadPreviousPage);
             GoToPageCommand = new RelayCommand(GoToPage);
 
+            // Nouvelles commandes pour annuler des sanctions
+            CancelSanctionCommand = new RelayCommand(ShowCancelSanctionPopup, () => CanCancelSanction);
+            ConfirmCancelSanctionCommand = new RelayCommand(ConfirmCancelSanction);
+            CloseCancelPopupCommand = new RelayCommand(CloseCancelPopup);
+
             LoadSanctions();
+        }
+
+        // Propriété pour vérifier si la sanction sélectionnée peut être annulée
+        public bool CanCancelSanction => SelectedSanction != null && SelectedSanction.Status == "active";
+
+        private void ShowCancelSanctionPopup()
+        {
+            if (SelectedSanction == null || SelectedSanction.Status != "active")
+            {
+                MessageBox.Show("Sélectionnez une sanction active pour l'annuler.", "Avertissement", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            CancelReason = string.Empty;
+            IsConfirmCancelPopupOpen = true;
+        }
+
+        private void CloseCancelPopup()
+        {
+            IsConfirmCancelPopupOpen = false;
+        }
+
+        private void ConfirmCancelSanction()
+        {
+            if (SelectedSanction == null) return;
+
+            try
+            {
+                LoadingVisibility = nameof(EVisibility.Visible);
+                DataGridVisibility = nameof(EVisibility.Hidden);
+
+                // Récupérer la sanction depuis la base de données pour être sûr qu'elle est bien trackée
+                var sanctionToUpdate = _sanctionManager.GetSanctionById(SelectedSanction.Id);
+
+                if (sanctionToUpdate == null)
+                {
+                    MessageBox.Show("Impossible de trouver la sanction à annuler.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Mettre à jour le statut de la sanction
+                sanctionToUpdate.Status = "inactive"; // Utiliser "inactive" au lieu de "canceled"
+                sanctionToUpdate.UpdatedAt = DateTime.Now;
+
+                // Ajouter un champ pour la raison d'annulation dans la description
+                if (string.IsNullOrEmpty(sanctionToUpdate.Description))
+                {
+                    sanctionToUpdate.Description = $"[ANNULÉ LE {DateTime.Now:dd/MM/yyyy}] Raison: {CancelReason}";
+                }
+                else
+                {
+                    sanctionToUpdate.Description += $"\n[ANNULÉ LE {DateTime.Now:dd/MM/yyyy}] Raison: {CancelReason}";
+                }
+
+                // Mettre à jour la sanction
+                _sanctionManager.UpdateSanction(sanctionToUpdate);
+
+                MessageBox.Show("La sanction a été annulée avec succès.", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                IsConfirmCancelPopupOpen = false;
+
+                // Recharger les sanctions
+                SelectedSanction = null;
+                _sanctionManager.GetAllSanctions(); // Recharger depuis la base de données
+                LoadSanctions();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'annulation de la sanction : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                LoadingVisibility = nameof(EVisibility.Hidden);
+                DataGridVisibility = nameof(EVisibility.Visible);
+            }
+        }
+
+        // Méthode exécutée lorsque SelectedSanction change
+        partial void OnSelectedSanctionChanged(SanctionsUser? oldValue, SanctionsUser? newValue)
+        {
+            // Notifier les commandes 
+            (CancelSanctionCommand as RelayCommand)?.NotifyCanExecuteChanged();
         }
 
         private void LoadSanctions()
@@ -90,6 +185,17 @@ namespace GetOutAdminV2.ViewModels
                     MessageBox.Show("Aucune sanction active n'a été trouvée.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
 
+                // Réinitialiser le compteur de page à 0 si aucune sanction n'est disponible
+                if (_totalSanctions == 0)
+                {
+                    _currentPage = 0;
+                }
+                // S'assurer que le numéro de page actuel est valide
+                else if (_currentPage < 0 || _currentPage >= TotalPages)
+                {
+                    _currentPage = 0;
+                }
+
                 LoadSanctionsForPage(_currentPage, activeSanctions);
             }
             catch (Exception ex)
@@ -105,6 +211,10 @@ namespace GetOutAdminV2.ViewModels
 
         private IEnumerable<SanctionsUser> GetSanctions(int startIndex, int count, List<SanctionsUser> sanctions)
         {
+            if (startIndex >= sanctions.Count)
+            {
+                return new List<SanctionsUser>();
+            }
             return sanctions.Skip(startIndex).Take(count);
         }
 
@@ -145,11 +255,11 @@ namespace GetOutAdminV2.ViewModels
         private void GoToPage()
         {
             int backendPageIndex = SelectedPageIndex - 1;
-            int maxPageIndex = (int)Math.Ceiling((double)_totalSanctions / PageSize) - 1;
+            int maxPageIndex = Math.Max(0, (int)Math.Ceiling((double)_totalSanctions / PageSize) - 1);
 
             if (backendPageIndex < 0 || backendPageIndex > maxPageIndex)
             {
-                MessageBox.Show($"Index de page invalide. Veuillez saisir un index entre 1 et {maxPageIndex + 1}.");
+                MessageBox.Show($"Index de page invalide. Veuillez saisir un index entre 1 et {maxPageIndex + 1}.", "Avertissement", MessageBoxButton.OK, MessageBoxImage.Warning);
                 SelectedPageIndex = _currentPage + 1;
                 return;
             }
