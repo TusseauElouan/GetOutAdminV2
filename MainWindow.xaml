@@ -9,7 +9,7 @@
         xmlns:converters="clr-namespace:GetOutAdminV2.Converters" 
         xmlns:vm="clr-namespace:GetOutAdminV2.ViewModels"
         xmlns:controls="clr-namespace:GetOutAdminV2.Controls"
-        Title="GetOut" Height="900" Width="1600"
+        Title="GetOut" Height="1080" Width="1920"
         Icon="/Resources/Images/logo.png"
         Background="#1E1E1E" 
         WindowStyle="SingleBorderWindow"

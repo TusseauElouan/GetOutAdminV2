@@ -125,7 +125,13 @@ namespace GetOutAdminV2.ViewModels
 
             LoadUsersExcludingAdmins();
 
-            LoadNextPage();
+            // Au lieu d'appeler LoadNextPage qui incrémente _currentPage,
+            // on initialise directement à 0 et on charge la première page
+            _currentPage = 0;
+            LoadUsersForPage(_currentPage);
+            SelectedPageIndex = _currentPage + 1;
+            CanLoadPreviousPage = _currentPage > 0;
+            CanLoadNextPage = _totalUsers > (_currentPage + 1) * PageSize;
         }
         private void PromoteToAdmin()
         {
