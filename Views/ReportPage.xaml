@@ -136,69 +136,67 @@
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter Property="Background" Value="#6B46C1"/>
-                                <!-- On garde le texte blanc quand sélectionné -->
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
                 </Setter.Value>
             </Setter>
-            <!-- Cette partie est essentielle pour que le texte visible dans la combobox soit foncé -->
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
                         <Grid>
                             <ToggleButton x:Name="ToggleButton" 
-                                  Background="{TemplateBinding Background}"
-                                  BorderBrush="{TemplateBinding BorderBrush}"
-                                  BorderThickness="{TemplateBinding BorderThickness}"
-                                  Padding="{TemplateBinding Padding}"
-                                  IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                          Background="{TemplateBinding Background}"
+                          BorderBrush="{TemplateBinding BorderBrush}"
+                          BorderThickness="{TemplateBinding BorderThickness}"
+                          Padding="{TemplateBinding Padding}"
+                          IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
                                         <Border Background="{TemplateBinding Background}" 
-                                        BorderBrush="{TemplateBinding BorderBrush}" 
-                                        BorderThickness="{TemplateBinding BorderThickness}" 
-                                        CornerRadius="4">
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="4">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <ContentPresenter Grid.Column="0" 
-                                                          HorizontalAlignment="Left" 
-                                                          VerticalAlignment="Center" 
-                                                          Margin="5,0,0,0"/>
+                                                  Content="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                  HorizontalAlignment="Left" 
+                                                  VerticalAlignment="Center" 
+                                                  Margin="5,0,0,0"/>
                                                 <Path Grid.Column="1" 
-                                              Data="M0,0 L8,0 L4,4 Z" 
-                                              Fill="White" 
-                                              Margin="0,0,8,0" 
-                                              VerticalAlignment="Center" 
-                                              HorizontalAlignment="Right"/>
+                                      Data="M0,0 L8,0 L4,4 Z" 
+                                      Fill="White" 
+                                      Margin="0,0,8,0" 
+                                      VerticalAlignment="Center" 
+                                      HorizontalAlignment="Right"/>
                                             </Grid>
                                         </Border>
                                     </ControlTemplate>
                                 </ToggleButton.Template>
-                                <ContentPresenter>
-                                    <ContentPresenter.Resources>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#333333"/>
-                                        </Style>
-                                    </ContentPresenter.Resources>
-                                </ContentPresenter>
+                                <ToggleButton.ContentTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" Foreground="White"/>
+                                    </DataTemplate>
+                                </ToggleButton.ContentTemplate>
                             </ToggleButton>
                             <Popup x:Name="PART_Popup" 
-                           IsOpen="{Binding Path=IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
-                           AllowsTransparency="True" 
-                           StaysOpen="False" 
-                           Placement="Bottom">
+                   IsOpen="{Binding Path=IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                   AllowsTransparency="True" 
+                   StaysOpen="False" 
+                   Placement="Bottom">
                                 <Border Background="#2E2E2E" 
-                                BorderBrush="#6B46C1" 
-                                BorderThickness="1" 
-                                CornerRadius="0,0,4,4">
+                        BorderBrush="#6B46C1" 
+                        BorderThickness="1" 
+                        CornerRadius="0,0,4,4">
                                     <ScrollViewer VerticalScrollBarVisibility="Auto" 
-                                          HorizontalScrollBarVisibility="Disabled" 
-                                          MaxHeight="200">
+                                  HorizontalScrollBarVisibility="Disabled" 
+                                  MaxHeight="200">
                                         <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/>
                                     </ScrollViewer>
                                 </Border>
@@ -217,18 +215,22 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <!-- Filtre par statut -->
             <RowDefinition Height="*" />
+            <!-- DataGrid principal -->
             <RowDefinition Height="Auto" />
+            <!-- Boutons d'action (déplacés) -->
+            <RowDefinition Height="Auto" />
+            <!-- Contrôles de pagination -->
         </Grid.RowDefinitions>
 
-        <!-- En-tête avec filtres -->
+        <!-- En-tête avec filtres (reste à la même position) -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10" HorizontalAlignment="Center">
             <TextBlock Text="Filtrer par statut:" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0"/>
             <ComboBox ItemsSource="{Binding Source={StaticResource ReportStatusValues}}"
-          SelectedItem="{Binding SelectedStatus}" 
-          Width="200"
-          Style="{StaticResource CustomComboBoxStyle}">
+                  SelectedItem="{Binding SelectedStatus}" 
+                  Width="200"
+                  Style="{StaticResource CustomComboBoxStyle}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding}" Foreground="White" />
@@ -237,35 +239,15 @@
             </ComboBox>
         </StackPanel>
 
-        <!-- Boutons pour actions sur les reports -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10,0,10,10">
-            <Button Command="{Binding ShowSanctionPopupCommand}" 
-                    Style="{StaticResource ActionButtonStyle}">
-                <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome Icon="Ban" Foreground="White" Width="16" Height="16" />
-                    <TextBlock Text=" Sanctionner l'utilisateur signalé" Margin="5,0,0,0" />
-                </StackPanel>
-            </Button>
-
-            <Button Command="{Binding ShowChangeStatusPopupCommand}" 
-                    Style="{StaticResource ActionButtonStyle}"
-                    Margin="10,0,0,0">
-                <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome Icon="Exchange" Foreground="White" Width="16" Height="16" />
-                    <TextBlock Text=" Changer le statut" Margin="5,0,0,0" />
-                </StackPanel>
-            </Button>
-        </StackPanel>
-
-        <!-- DataGrid principal -->
-        <DataGrid Grid.Row="2"
-                  ItemsSource="{Binding Reports}"
-                  SelectedItem="{Binding SelectedReport, Mode=TwoWay}"
-                  Style="{StaticResource StyledDataGrid}"
-                  CellStyle="{StaticResource CenteredCellStyle}"
-                  Margin="10"
-                  SelectionMode="Single"
-                  Visibility="{Binding DataGridVisibility}">
+        <!-- DataGrid principal (maintenant en position 1) -->
+        <DataGrid Grid.Row="1"
+              ItemsSource="{Binding Reports}"
+              SelectedItem="{Binding SelectedReport, Mode=TwoWay}"
+              Style="{StaticResource StyledDataGrid}"
+              CellStyle="{StaticResource CenteredCellStyle}"
+              Margin="10"
+              SelectionMode="Single"
+              Visibility="{Binding DataGridVisibility}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Reporter" Binding="{Binding Reporter.Nom}" Width="150"/>
                 <DataGridTextColumn Header="Utilisateur signalé" Binding="{Binding ReportedUser.Nom}" Width="150"/>
@@ -275,34 +257,54 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Indicateur de chargement -->
-        <fa:ImageAwesome Grid.Row="2" 
-                         Icon="Spinner" 
-                         Spin="True"
-                         SpinDuration="1"
-                         Width="50" Height="50"
-                         Visibility="{Binding LoadingVisibility}" 
-                         VerticalAlignment="Center" 
-                         HorizontalAlignment="Center" 
-                         Foreground="White" />
+        <!-- Indicateur de chargement (ajusté pour grid.row 1) -->
+        <fa:ImageAwesome Grid.Row="1" 
+                     Icon="Spinner" 
+                     Spin="True"
+                     SpinDuration="1"
+                     Width="50" Height="50"
+                     Visibility="{Binding LoadingVisibility}" 
+                     VerticalAlignment="Center" 
+                     HorizontalAlignment="Center" 
+                     Foreground="White" />
 
-        <!-- Contrôles de pagination -->
+        <!-- Boutons pour actions sur les reports (déplacés ici, maintenant en position 2) -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <Button Command="{Binding ShowSanctionPopupCommand}" 
+                Style="{StaticResource ActionButtonStyle}">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Ban" Foreground="White" Width="16" Height="16" />
+                    <TextBlock Text=" Sanctionner l'utilisateur signalé" Margin="5,0,0,0" />
+                </StackPanel>
+            </Button>
+
+            <Button Command="{Binding ShowChangeStatusPopupCommand}" 
+                Style="{StaticResource ActionButtonStyle}"
+                Margin="10,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Exchange" Foreground="White" Width="16" Height="16" />
+                    <TextBlock Text=" Changer le statut" Margin="5,0,0,0" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!-- Contrôles de pagination (maintenant en position 3) -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
             <Button Command="{Binding LoadPreviousPageCommand}" 
-                    Style="{StaticResource PaginationButtonStyle}"
-                    IsEnabled="{Binding CanLoadPreviousPage}">
+                Style="{StaticResource PaginationButtonStyle}"
+                IsEnabled="{Binding CanLoadPreviousPage}">
                 <fa:ImageAwesome Icon="ArrowLeft" Foreground="White" Width="14" Height="14" />
             </Button>
             <TextBox Text="{Binding SelectedPageIndex, UpdateSourceTrigger=PropertyChanged}" 
-                     Style="{StaticResource PageNumberStyle}"/>
+                 Style="{StaticResource PageNumberStyle}"/>
             <TextBlock Text="/" Foreground="White" VerticalAlignment="Center" Margin="3"/>
             <TextBlock Text="{Binding TotalPages}" Foreground="White" VerticalAlignment="Center" Margin="3"/>
             <Button Command="{Binding GoToPageCommand}" 
-                    Style="{StaticResource PaginationButtonStyle}"
-                    Content="OK"/>
+                Style="{StaticResource PaginationButtonStyle}"
+                Content="OK"/>
             <Button Command="{Binding LoadNextPageCommand}" 
-                    Style="{StaticResource PaginationButtonStyle}"
-                    IsEnabled="{Binding CanLoadNextPage}">
+                Style="{StaticResource PaginationButtonStyle}"
+                IsEnabled="{Binding CanLoadNextPage}">
                 <fa:ImageAwesome Icon="ArrowRight" Foreground="White" Width="14" Height="14" />
             </Button>
         </StackPanel>

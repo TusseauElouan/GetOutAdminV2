@@ -106,7 +106,7 @@ namespace GetOutAdminV2.ViewModels
             _userManager = ServiceLocator.GetRequiredService<IUserManager>();
             _typeReportManager = ServiceLocator.GetRequiredService<ITypeReportManager>();
             _sanctionManager = ServiceLocator.GetRequiredService<ISanctionManager>();
-
+            SelectedStatus = EReportStatus.pending;
             _reportManager.GetAllReports();
             _typeReportManager.GetAllTypeReports();
             Reports = new(_reportManager.ListOfReports);
@@ -320,8 +320,8 @@ namespace GetOutAdminV2.ViewModels
         {
             // Filtrer les rapports selon le statut sélectionné
             var filteredReports = _reportManager.ListOfReports
-                                                .Where(report => report.Status == SelectedStatus.ToString())
-                                                .ToList();
+                                     .Where(report => report.Status == SelectedStatus.ToString())
+                                     .ToList();
 
             Reports.Clear();
             foreach (var report in filteredReports)
