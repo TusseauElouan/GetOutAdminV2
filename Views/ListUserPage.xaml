@@ -244,9 +244,6 @@
         <TextBlock Grid.Row="0" Text="Gestion des Utilisateurs" FontSize="24" FontWeight="Bold" 
                    Foreground="White" HorizontalAlignment="Center" Margin="0,20,0,20"/>
 
-        <!-- Zone de notification qui remplace les MessageBox -->
-        <controls:NotificationHost Grid.Row="1" x:Name="NotificationArea" />
-
         <!-- DataGrid principal -->
         <DataGrid Grid.Row="1" ItemsSource="{Binding Users}"
                   SelectedItem="{Binding SelectedUser, Mode=TwoWay}"

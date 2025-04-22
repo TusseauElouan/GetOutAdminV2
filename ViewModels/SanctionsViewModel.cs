@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows;
 
 namespace GetOutAdminV2.ViewModels
 {
@@ -85,7 +84,7 @@ namespace GetOutAdminV2.ViewModels
         {
             if (SelectedSanction == null || SelectedSanction.Status != "active")
             {
-                MessageBox.Show("Sélectionnez une sanction active pour l'annuler.", "Avertissement", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.Notify("Sélectionnez une sanction active pour l'annuler.", NotificationType.Warning);
                 return;
             }
 
@@ -112,7 +111,7 @@ namespace GetOutAdminV2.ViewModels
 
                 if (sanctionToUpdate == null)
                 {
-                    MessageBox.Show("Impossible de trouver la sanction à annuler.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationService.Notify("Impossible de trouver la sanction à annuler.", NotificationType.Error);
                     return;
                 }
 
@@ -133,7 +132,7 @@ namespace GetOutAdminV2.ViewModels
                 // Mettre à jour la sanction
                 _sanctionManager.UpdateSanction(sanctionToUpdate);
 
-                MessageBox.Show("La sanction a été annulée avec succès.", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.Notify("La sanction a été annulée avec succès.", NotificationType.Success);
                 IsConfirmCancelPopupOpen = false;
 
                 // Recharger les sanctions
@@ -143,7 +142,7 @@ namespace GetOutAdminV2.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'annulation de la sanction : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.Notify($"Erreur lors de l'annulation de la sanction : {ex.Message}", NotificationType.Error);
             }
             finally
             {
@@ -182,7 +181,7 @@ namespace GetOutAdminV2.ViewModels
                 // Si aucune sanction active, afficher un message
                 if (_totalSanctions == 0)
                 {
-                    MessageBox.Show("Aucune sanction active n'a été trouvée.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.Notify("Aucune sanction active n'a été trouvée.", NotificationType.Info);
                 }
 
                 // Réinitialiser le compteur de page à 0 si aucune sanction n'est disponible
@@ -200,7 +199,7 @@ namespace GetOutAdminV2.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des sanctions : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.Notify($"Erreur lors du chargement des sanctions : {ex.Message}", NotificationType.Error);
             }
             finally
             {
@@ -259,7 +258,7 @@ namespace GetOutAdminV2.ViewModels
 
             if (backendPageIndex < 0 || backendPageIndex > maxPageIndex)
             {
-                MessageBox.Show($"Index de page invalide. Veuillez saisir un index entre 1 et {maxPageIndex + 1}.", "Avertissement", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.Notify($"Index de page invalide. Veuillez saisir un index entre 1 et {maxPageIndex + 1}.", NotificationType.Warning);
                 SelectedPageIndex = _currentPage + 1;
                 return;
             }
