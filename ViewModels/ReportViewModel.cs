@@ -84,7 +84,10 @@ namespace GetOutAdminV2.ViewModels
         private string _statusChangedNote = string.Empty;
 
         public IEnumerable<ESanctionDuration> SanctionDurations => System.Enum.GetValues(typeof(ESanctionDuration)).Cast<ESanctionDuration>();
-        public IEnumerable<EReportStatus> AvailableStatuses => System.Enum.GetValues(typeof(EReportStatus)).Cast<EReportStatus>();
+        public IEnumerable<EReportStatus> AvailableStatuses => System.Enum.GetValues(typeof(EReportStatus))
+                                                                        .Cast<EReportStatus>()
+                                                                        .Where(status => status != EReportStatus.resolved)
+                                                                        .ToList();
 
         public IRelayCommand LoadNextPageCommand { get; }
         public IRelayCommand LoadPreviousPageCommand { get; }
