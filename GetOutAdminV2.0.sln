@@ -5,7 +5,7 @@ VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GetOutAdminV2", "GetOutAdminV2.csproj", "{7CA4DB0E-DEFF-4139-AC2E-EF6AD34DBA87}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GetOutAdminV2.Tests", "..\GetOutAdminV2.Test\GetOutAdminV2.Tests.csproj", "{AAE27355-430D-46BA-AD9E-5BCBAA2042A5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GetOutAdminV2.Tests", "GetOutAdminV2.Test\GetOutAdminV2.Tests.csproj", "{F6ED586F-71C1-F684-6E99-56FD896D5884}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{7CA4DB0E-DEFF-4139-AC2E-EF6AD34DBA87}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7CA4DB0E-DEFF-4139-AC2E-EF6AD34DBA87}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7CA4DB0E-DEFF-4139-AC2E-EF6AD34DBA87}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AAE27355-430D-46BA-AD9E-5BCBAA2042A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AAE27355-430D-46BA-AD9E-5BCBAA2042A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AAE27355-430D-46BA-AD9E-5BCBAA2042A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AAE27355-430D-46BA-AD9E-5BCBAA2042A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6ED586F-71C1-F684-6E99-56FD896D5884}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6ED586F-71C1-F684-6E99-56FD896D5884}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6ED586F-71C1-F684-6E99-56FD896D5884}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6ED586F-71C1-F684-6E99-56FD896D5884}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -11,6 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="GetOutAdminV2.Test\**" />
+    <EmbeddedResource Remove="GetOutAdminV2.Test\**" />
+    <None Remove="GetOutAdminV2.Test\**" />
+    <Page Remove="GetOutAdminV2.Test\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Resources\Images\logo.png" />
   </ItemGroup>
 

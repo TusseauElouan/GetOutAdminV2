@@ -24,7 +24,6 @@ namespace GetOutAdminV2.ViewModels
             IsLoading = false;
 
             _navigationViewModel = navigationViewModel;
-
             _userManager = ServiceLocator.GetRequiredService<IUserManager>();
             _userManager.GetAllUsers();
         }
